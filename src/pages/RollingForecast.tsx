@@ -801,8 +801,9 @@ const RollingForecast: React.FC = () => {
 
   // Calculate inventory insights
   const calculateInventoryInsights = () => {
-    const totalStock = tableData.reduce((sum, row) => sum + row.stock, 0);
-    const totalGit = tableData.reduce((sum, row) => sum + row.git, 0);
+    const safeTableData = Array.isArray(tableData) ? tableData : [];
+    const totalStock = safeTableData.reduce((sum, row) => sum + (row?.stock || 0), 0);
+    const totalGit = safeTableData.reduce((sum, row) => sum + (row?.git || 0), 0);
     const totalDemand = calculateSummaryStats().forecast;
     
     const stockTurnover = totalDemand > 0 ? (totalStock / totalDemand) * 12 : 0;
