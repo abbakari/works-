@@ -28,17 +28,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const getSession = async () => {
       try {
-        // Optional health check with timeout
+        // Optional health check with timeout - less aggressive error handling
         try {
           const healthCheck = await Promise.race([
             apiService.healthCheck(),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2000))
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1000))
           ]);
           if (healthCheck.data) {
             console.log('Backend API is healthy:', healthCheck.data);
           }
         } catch (healthError) {
-          console.warn('Health check failed or timed out, using localStorage only:', healthError);
+          console.log('Health check failed - working in offline mode:', healthError.message);
         }
 
         // Use local storage for authentication
@@ -52,6 +52,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             console.error('Error parsing saved user:', error);
             localStorage.removeItem('user');
           }
+        } else {
+          // If no saved user, create a demo user for testing
+          const demoUser = {
+            id: 'demo-1',
+            email: 'demo@example.com',
+            name: 'Demo User',
+            role: 'admin' as const,
+            permissions: ['read', 'write', 'delete'],
+            department: 'Sales'
+          };
+          setUser(demoUser);
+          localStorage.setItem('user', JSON.stringify(demoUser));
+          console.log('Demo user created for testing');
         }
       } catch (err) {
         console.error('Error in getSession:', err);
