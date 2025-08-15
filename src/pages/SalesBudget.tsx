@@ -1403,11 +1403,11 @@ const SalesBudget: React.FC = () => {
                     </button>
                   </div>
                   <p className="text-xl font-bold text-green-600">
-                    {tableData.reduce((sum, item) => sum + item.stock, 0).toLocaleString()} units
+                    {safeTableData.reduce((sum, item) => sum + (item?.stock || 0), 0).toLocaleString()} units
                   </p>
                   <div className="flex items-center gap-4 mt-1">
                     <div className="text-xs text-gray-600">
-                      <span className="font-medium">GIT:</span> {tableData.reduce((sum, item) => sum + item.git, 0).toLocaleString()}
+                      <span className="font-medium">GIT:</span> {safeTableData.reduce((sum, item) => sum + (item?.git || 0), 0).toLocaleString()}
                     </div>
                     <button
                       onClick={() => setIsStockManagementModalOpen(true)}
