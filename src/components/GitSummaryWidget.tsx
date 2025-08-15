@@ -173,7 +173,7 @@ const GitSummaryWidget: React.FC<GitSummaryWidgetProps> = ({ userRole, compact =
           <Clock className="w-6 h-6 text-orange-600 mx-auto mb-2" />
           <div className="text-sm text-orange-600 mb-1">Avg Lead Time</div>
           <div className="text-2xl font-bold text-orange-700">
-            {allGitData.length > 0 ? Math.round(allGitData.reduce((sum, item) => sum + (item.leadTimeDays || 14), 0) / allGitData.length) : 0} days
+            {safeGitData.length > 0 ? Math.round(safeGitData.reduce((sum, item) => sum + (item?.leadTimeDays || 14), 0) / safeGitData.length) : 0} days
           </div>
         </div>
       </div>
