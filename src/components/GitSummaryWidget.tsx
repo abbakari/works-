@@ -14,18 +14,25 @@ const GitSummaryWidget: React.FC<GitSummaryWidgetProps> = ({ userRole, compact =
 
   // Initialize and load GIT data
   useEffect(() => {
-    const loadGitData = () => {
-      // Initialize sample GIT data if none exists
-      const initialized = initializeSampleGitData();
-      if (initialized) {
-        console.log('Sample GIT data initialized for GitSummaryWidget');
-      }
+    const loadGitData = async () => {
+      try {
+        // Initialize sample GIT data if none exists
+        const initialized = initializeSampleGitData();
+        if (initialized) {
+          console.log('Sample GIT data initialized for GitSummaryWidget');
+        }
 
-      // Load GIT data
-      const gitData = DataPersistenceManager.getGitData();
-      console.log('Loaded GIT data in GitSummaryWidget:', gitData.length, 'items');
-      setAllGitData(gitData);
-      setLastUpdate(new Date());
+        // Load GIT data
+        const gitData = await DataPersistenceManager.getGitData();
+        // Ensure gitData is always an array
+        const safeGitData = Array.isArray(gitData) ? gitData : [];
+        console.log('Loaded GIT data in GitSummaryWidget:', safeGitData.length, 'items');
+        setAllGitData(safeGitData);
+        setLastUpdate(new Date());
+      } catch (error) {
+        console.error('Error loading GIT data:', error);
+        setAllGitData([]);
+      }
     };
 
     // Load data initially
