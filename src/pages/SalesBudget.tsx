@@ -748,16 +748,17 @@ const SalesBudget: React.FC = () => {
 
   // Generate customer forecast data for the modal
   const generateCustomerForecastData = (customerName: string) => {
-    const customerRows = originalTableData.filter(row => row.customer === customerName);
+    const safeOriginalTableData = Array.isArray(originalTableData) ? originalTableData : [];
+    const customerRows = safeOriginalTableData.filter(row => row?.customer === customerName);
     if (customerRows.length === 0) return null;
 
     // Calculate totals
-    const totalBudgetValue = customerRows.reduce((sum, row) => sum + row.budget2025, 0);
-    const totalActualValue = customerRows.reduce((sum, row) => sum + row.actual2025, 0);
-    const totalForecastValue = customerRows.reduce((sum, row) => sum + row.budgetValue2026, 0);
-    const totalBudgetUnits = customerRows.reduce((sum, row) => sum + Math.floor(row.budget2025 / (row.rate || 1)), 0);
-    const totalActualUnits = customerRows.reduce((sum, row) => sum + Math.floor(row.actual2025 / (row.rate || 1)), 0);
-    const totalForecastUnits = customerRows.reduce((sum, row) => sum + row.budget2026, 0);
+    const totalBudgetValue = customerRows.reduce((sum, row) => sum + (row?.budget2025 || 0), 0);
+    const totalActualValue = customerRows.reduce((sum, row) => sum + (row?.actual2025 || 0), 0);
+    const totalForecastValue = customerRows.reduce((sum, row) => sum + (row?.budgetValue2026 || 0), 0);
+    const totalBudgetUnits = customerRows.reduce((sum, row) => sum + Math.floor((row?.budget2025 || 0) / (row?.rate || 1)), 0);
+    const totalActualUnits = customerRows.reduce((sum, row) => sum + Math.floor((row?.actual2025 || 0) / (row?.rate || 1)), 0);
+    const totalForecastUnits = customerRows.reduce((sum, row) => sum + (row?.budget2026 || 0), 0);
 
     // Generate monthly data
     const monthlyData = months.map(month => {
