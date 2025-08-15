@@ -1281,25 +1281,26 @@ const SalesBudget: React.FC = () => {
     }
   };
 
-  // Calculate totals based on filtered data and dynamic year selection
-  const totalBaseBudget = tableData.reduce((sum, item) => sum + getYearValue(item, selectedBaseYear, 'budget'), 0);
-  const totalBaseActual = tableData.reduce((sum, item) => sum + getYearValue(item, selectedBaseYear, 'actual'), 0);
-  const totalTargetBudget = tableData.reduce((sum, item) => sum + getYearValue(item, selectedTargetYear, 'value'), 0);
+  // Calculate totals based on filtered data and dynamic year selection with safety checks
+  const safeTableData = Array.isArray(tableData) ? tableData : [];
+  const totalBaseBudget = safeTableData.reduce((sum, item) => sum + getYearValue(item, selectedBaseYear, 'budget'), 0);
+  const totalBaseActual = safeTableData.reduce((sum, item) => sum + getYearValue(item, selectedBaseYear, 'actual'), 0);
+  const totalTargetBudget = safeTableData.reduce((sum, item) => sum + getYearValue(item, selectedTargetYear, 'value'), 0);
 
   // Calculate units from budget values
-  const totalBaseUnits = tableData.reduce((sum, item) => {
+  const totalBaseUnits = safeTableData.reduce((sum, item) => {
     const budgetValue = getYearValue(item, selectedBaseYear, 'budget');
-    return sum + Math.floor(budgetValue / (item.rate || 1));
+    return sum + Math.floor(budgetValue / (item?.rate || 1));
   }, 0);
 
-  const totalTargetUnits = tableData.reduce((sum, item) => {
+  const totalTargetUnits = safeTableData.reduce((sum, item) => {
     const budgetValue = getYearValue(item, selectedTargetYear, 'budget');
-    return sum + Math.floor(budgetValue / (item.rate || 1));
+    return sum + Math.floor(budgetValue / (item?.rate || 1));
   }, 0);
 
-  const totalBaseActualUnits = tableData.reduce((sum, item) => {
+  const totalBaseActualUnits = safeTableData.reduce((sum, item) => {
     const actualValue = getYearValue(item, selectedBaseYear, 'actual');
-    return sum + Math.floor(actualValue / (item.rate || 1));
+    return sum + Math.floor(actualValue / (item?.rate || 1));
   }, 0);
 
   const budgetGrowth = totalBaseBudget > 0 ? ((totalTargetBudget - totalBaseBudget) / totalBaseBudget) * 100 : 0;
