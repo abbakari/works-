@@ -667,15 +667,16 @@ const RollingForecast: React.FC = () => {
 
   // Generate customer forecast data for the modal
   const generateCustomerForecastData = (customerName: string) => {
-    const customerRows = tableData.filter(row => row.customer === customerName);
+    const safeTableData = Array.isArray(tableData) ? tableData : [];
+    const customerRows = safeTableData.filter(row => row?.customer === customerName);
     if (customerRows.length === 0) return null;
 
     // Calculate totals based on forecast data
-    const totalBudgetUnits = customerRows.reduce((sum, row) => sum + row.bud25, 0);
-    const totalActualUnits = customerRows.reduce((sum, row) => sum + row.ytd25, 0);
+    const totalBudgetUnits = customerRows.reduce((sum, row) => sum + (row?.bud25 || 0), 0);
+    const totalActualUnits = customerRows.reduce((sum, row) => sum + (row?.ytd25 || 0), 0);
     const totalForecastUnits = customerRows.reduce((sum, row) => {
-      const monthlyData = getMonthlyData(row.id);
-      return sum + Object.values(monthlyData).reduce((total, value) => total + (value || 0), 0);
+      const monthlyData = getMonthlyData(row?.id);
+      return sum + Object.values(monthlyData || {}).reduce((total, value) => total + (value || 0), 0);
     }, 0);
 
     const totalBudgetValue = totalBudgetUnits * 100; // Assuming average rate
