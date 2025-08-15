@@ -1381,7 +1381,7 @@ const SalesBudget: React.FC = () => {
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Stock</p>
                   <p className="text-xl font-bold text-green-600">
-                    {tableData.reduce((sum, item) => sum + item.stock, 0).toLocaleString()} units
+                    {safeTableData.reduce((sum, item) => sum + (item?.stock || 0), 0).toLocaleString()} units
                   </p>
                 </div>
               </div>
