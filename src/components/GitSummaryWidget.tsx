@@ -44,25 +44,27 @@ const GitSummaryWidget: React.FC<GitSummaryWidgetProps> = ({ userRole, compact =
     return () => clearInterval(interval);
   }, []);
   
-  // Calculate summary metrics
-  const totalGitItems = allGitData.length;
-  const totalGitQuantity = allGitData.reduce((sum, item) => sum + item.gitQuantity, 0);
-  const totalGitValue = allGitData.reduce((sum, item) => sum + item.estimatedValue, 0);
-  
+  // Calculate summary metrics with safety checks
+  const safeGitData = Array.isArray(allGitData) ? allGitData : [];
+  const totalGitItems = safeGitData.length;
+  const totalGitQuantity = safeGitData.reduce((sum, item) => sum + (item?.gitQuantity || 0), 0);
+  const totalGitValue = safeGitData.reduce((sum, item) => sum + (item?.estimatedValue || 0), 0);
+
   // Status breakdown
-  const statusCounts = allGitData.reduce((acc, item) => {
-    acc[item.status] = (acc[item.status] || 0) + 1;
+  const statusCounts = safeGitData.reduce((acc, item) => {
+    const status = item?.status || 'unknown';
+    acc[status] = (acc[status] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
   // Overdue items
-  const overdueItems = allGitData.filter(item => 
-    item.eta && new Date(item.eta) < new Date()
+  const overdueItems = safeGitData.filter(item =>
+    item?.eta && new Date(item.eta) < new Date()
   ).length;
 
   // Items arriving soon (within 7 days)
-  const upcomingItems = allGitData.filter(item => {
-    if (!item.eta) return false;
+  const upcomingItems = safeGitData.filter(item => {
+    if (!item?.eta) return false;
     const eta = new Date(item.eta);
     const now = new Date();
     const daysDiff = Math.ceil((eta.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
