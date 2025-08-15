@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:with-backend": "concurrently \"cd backend && python3 manage.py runserver 127.0.0.1:8000\" \"vite\"",
+    "dev:with-backend": "concurrently \"source venv/bin/activate && cd backend && python manage.py runserver 127.0.0.1:8000\" \"vite\"",
     "dev:frontend": "vite",
-    "dev:backend": "cd backend && python3 manage.py runserver 127.0.0.1:8000",
+    "dev:backend": "source venv/bin/activate && cd backend && python manage.py runserver 127.0.0.1:8000",
     "migrate": "cd backend && python manage.py migrate",
     "createsuperuser": "cd backend && python manage.py createsuperuser",
     "collectstatic": "cd backend && python manage.py collectstatic --noinput",
