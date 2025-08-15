@@ -823,11 +823,12 @@ const RollingForecast: React.FC = () => {
   const summaryStats = calculateSummaryStats();
   const inventoryInsights = calculateInventoryInsights();
 
-  const filteredData = tableData.filter((item: any) => {
-    return (!selectedCustomer || item.customer.includes(selectedCustomer)) &&
+  const safeTableDataForFilter = Array.isArray(tableData) ? tableData : [];
+  const filteredData = safeTableDataForFilter.filter((item: any) => {
+    return (!selectedCustomer || item?.customer?.includes(selectedCustomer)) &&
            (!selectedCategory || categories.includes(selectedCategory)) &&
            (!selectedBrand || brands.includes(selectedBrand)) &&
-           (!selectedItem || item.item.includes(selectedItem));
+           (!selectedItem || item?.item?.includes(selectedItem));
   });
 
   const sortedData = [...filteredData].sort((a, b) => {
