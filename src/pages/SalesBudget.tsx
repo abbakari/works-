@@ -748,16 +748,17 @@ const SalesBudget: React.FC = () => {
 
   // Generate customer forecast data for the modal
   const generateCustomerForecastData = (customerName: string) => {
-    const customerRows = originalTableData.filter(row => row.customer === customerName);
+    const safeOriginalTableData = Array.isArray(originalTableData) ? originalTableData : [];
+    const customerRows = safeOriginalTableData.filter(row => row?.customer === customerName);
     if (customerRows.length === 0) return null;
 
     // Calculate totals
-    const totalBudgetValue = customerRows.reduce((sum, row) => sum + row.budget2025, 0);
-    const totalActualValue = customerRows.reduce((sum, row) => sum + row.actual2025, 0);
-    const totalForecastValue = customerRows.reduce((sum, row) => sum + row.budgetValue2026, 0);
-    const totalBudgetUnits = customerRows.reduce((sum, row) => sum + Math.floor(row.budget2025 / (row.rate || 1)), 0);
-    const totalActualUnits = customerRows.reduce((sum, row) => sum + Math.floor(row.actual2025 / (row.rate || 1)), 0);
-    const totalForecastUnits = customerRows.reduce((sum, row) => sum + row.budget2026, 0);
+    const totalBudgetValue = customerRows.reduce((sum, row) => sum + (row?.budget2025 || 0), 0);
+    const totalActualValue = customerRows.reduce((sum, row) => sum + (row?.actual2025 || 0), 0);
+    const totalForecastValue = customerRows.reduce((sum, row) => sum + (row?.budgetValue2026 || 0), 0);
+    const totalBudgetUnits = customerRows.reduce((sum, row) => sum + Math.floor((row?.budget2025 || 0) / (row?.rate || 1)), 0);
+    const totalActualUnits = customerRows.reduce((sum, row) => sum + Math.floor((row?.actual2025 || 0) / (row?.rate || 1)), 0);
+    const totalForecastUnits = customerRows.reduce((sum, row) => sum + (row?.budget2026 || 0), 0);
 
     // Generate monthly data
     const monthlyData = months.map(month => {
@@ -1281,25 +1282,26 @@ const SalesBudget: React.FC = () => {
     }
   };
 
-  // Calculate totals based on filtered data and dynamic year selection
-  const totalBaseBudget = tableData.reduce((sum, item) => sum + getYearValue(item, selectedBaseYear, 'budget'), 0);
-  const totalBaseActual = tableData.reduce((sum, item) => sum + getYearValue(item, selectedBaseYear, 'actual'), 0);
-  const totalTargetBudget = tableData.reduce((sum, item) => sum + getYearValue(item, selectedTargetYear, 'value'), 0);
+  // Calculate totals based on filtered data and dynamic year selection with safety checks
+  const safeTableData = Array.isArray(tableData) ? tableData : [];
+  const totalBaseBudget = safeTableData.reduce((sum, item) => sum + getYearValue(item, selectedBaseYear, 'budget'), 0);
+  const totalBaseActual = safeTableData.reduce((sum, item) => sum + getYearValue(item, selectedBaseYear, 'actual'), 0);
+  const totalTargetBudget = safeTableData.reduce((sum, item) => sum + getYearValue(item, selectedTargetYear, 'value'), 0);
 
   // Calculate units from budget values
-  const totalBaseUnits = tableData.reduce((sum, item) => {
+  const totalBaseUnits = safeTableData.reduce((sum, item) => {
     const budgetValue = getYearValue(item, selectedBaseYear, 'budget');
-    return sum + Math.floor(budgetValue / (item.rate || 1));
+    return sum + Math.floor(budgetValue / (item?.rate || 1));
   }, 0);
 
-  const totalTargetUnits = tableData.reduce((sum, item) => {
+  const totalTargetUnits = safeTableData.reduce((sum, item) => {
     const budgetValue = getYearValue(item, selectedTargetYear, 'budget');
-    return sum + Math.floor(budgetValue / (item.rate || 1));
+    return sum + Math.floor(budgetValue / (item?.rate || 1));
   }, 0);
 
-  const totalBaseActualUnits = tableData.reduce((sum, item) => {
+  const totalBaseActualUnits = safeTableData.reduce((sum, item) => {
     const actualValue = getYearValue(item, selectedBaseYear, 'actual');
-    return sum + Math.floor(actualValue / (item.rate || 1));
+    return sum + Math.floor(actualValue / (item?.rate || 1));
   }, 0);
 
   const budgetGrowth = totalBaseBudget > 0 ? ((totalTargetBudget - totalBaseBudget) / totalBaseBudget) * 100 : 0;
@@ -1379,7 +1381,7 @@ const SalesBudget: React.FC = () => {
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Stock</p>
                   <p className="text-xl font-bold text-green-600">
-                    {tableData.reduce((sum, item) => sum + item.stock, 0).toLocaleString()} units
+                    {safeTableData.reduce((sum, item) => sum + (item?.stock || 0), 0).toLocaleString()} units
                   </p>
                 </div>
               </div>
@@ -1401,11 +1403,11 @@ const SalesBudget: React.FC = () => {
                     </button>
                   </div>
                   <p className="text-xl font-bold text-green-600">
-                    {tableData.reduce((sum, item) => sum + item.stock, 0).toLocaleString()} units
+                    {safeTableData.reduce((sum, item) => sum + (item?.stock || 0), 0).toLocaleString()} units
                   </p>
                   <div className="flex items-center gap-4 mt-1">
                     <div className="text-xs text-gray-600">
-                      <span className="font-medium">GIT:</span> {tableData.reduce((sum, item) => sum + item.git, 0).toLocaleString()}
+                      <span className="font-medium">GIT:</span> {safeTableData.reduce((sum, item) => sum + (item?.git || 0), 0).toLocaleString()}
                     </div>
                     <button
                       onClick={() => setIsStockManagementModalOpen(true)}

@@ -191,7 +191,7 @@ const RollingForecast: React.FC = () => {
       if (user) {
         try {
           const savedForecastData = await DataPersistenceManager.getRollingForecastDataByUser(user.name);
-          if (savedForecastData.length > 0) {
+          if (savedForecastData && savedForecastData.length > 0) {
             console.log('Loading saved forecast data for', user.name, ':', savedForecastData.length, 'items');
 
             // Update monthly forecast data from saved data
@@ -199,10 +199,10 @@ const RollingForecast: React.FC = () => {
 
             savedForecastData.forEach(savedItem => {
               const matchingRow = tableData.find(row =>
-                row.customer === savedItem.customer && row.item === savedItem.item
+                row?.customer === savedItem?.customer && row?.item === savedItem?.item
               );
 
-              if (matchingRow && savedItem.forecastData) {
+              if (matchingRow && savedItem?.forecastData) {
                 updatedMonthlyData[matchingRow.id] = savedItem.forecastData;
               }
             });
@@ -222,7 +222,12 @@ const RollingForecast: React.FC = () => {
             );
           }
         } catch (error) {
-          console.error('Error loading saved forecast data:', error);
+          // Handle API failures gracefully - this is expected when backend is not running
+          if (error instanceof Error && error.message.includes('Failed to fetch')) {
+            console.log('Backend not available - forecast data will be managed locally');
+          } else {
+            console.warn('Error loading saved forecast data:', error);
+          }
         }
       }
     };
@@ -667,15 +672,16 @@ const RollingForecast: React.FC = () => {
 
   // Generate customer forecast data for the modal
   const generateCustomerForecastData = (customerName: string) => {
-    const customerRows = tableData.filter(row => row.customer === customerName);
+    const safeTableData = Array.isArray(tableData) ? tableData : [];
+    const customerRows = safeTableData.filter(row => row?.customer === customerName);
     if (customerRows.length === 0) return null;
 
     // Calculate totals based on forecast data
-    const totalBudgetUnits = customerRows.reduce((sum, row) => sum + row.bud25, 0);
-    const totalActualUnits = customerRows.reduce((sum, row) => sum + row.ytd25, 0);
+    const totalBudgetUnits = customerRows.reduce((sum, row) => sum + (row?.bud25 || 0), 0);
+    const totalActualUnits = customerRows.reduce((sum, row) => sum + (row?.ytd25 || 0), 0);
     const totalForecastUnits = customerRows.reduce((sum, row) => {
-      const monthlyData = getMonthlyData(row.id);
-      return sum + Object.values(monthlyData).reduce((total, value) => total + (value || 0), 0);
+      const monthlyData = getMonthlyData(row?.id);
+      return sum + Object.values(monthlyData || {}).reduce((total, value) => total + (value || 0), 0);
     }, 0);
 
     const totalBudgetValue = totalBudgetUnits * 100; // Assuming average rate
@@ -800,8 +806,9 @@ const RollingForecast: React.FC = () => {
 
   // Calculate inventory insights
   const calculateInventoryInsights = () => {
-    const totalStock = tableData.reduce((sum, row) => sum + row.stock, 0);
-    const totalGit = tableData.reduce((sum, row) => sum + row.git, 0);
+    const safeTableData = Array.isArray(tableData) ? tableData : [];
+    const totalStock = safeTableData.reduce((sum, row) => sum + (row?.stock || 0), 0);
+    const totalGit = safeTableData.reduce((sum, row) => sum + (row?.git || 0), 0);
     const totalDemand = calculateSummaryStats().forecast;
     
     const stockTurnover = totalDemand > 0 ? (totalStock / totalDemand) * 12 : 0;
@@ -821,11 +828,12 @@ const RollingForecast: React.FC = () => {
   const summaryStats = calculateSummaryStats();
   const inventoryInsights = calculateInventoryInsights();
 
-  const filteredData = tableData.filter((item: any) => {
-    return (!selectedCustomer || item.customer.includes(selectedCustomer)) &&
+  const safeTableDataForFilter = Array.isArray(tableData) ? tableData : [];
+  const filteredData = safeTableDataForFilter.filter((item: any) => {
+    return (!selectedCustomer || item?.customer?.includes(selectedCustomer)) &&
            (!selectedCategory || categories.includes(selectedCategory)) &&
            (!selectedBrand || brands.includes(selectedBrand)) &&
-           (!selectedItem || item.item.includes(selectedItem));
+           (!selectedItem || item?.item?.includes(selectedItem));
   });
 
   const sortedData = [...filteredData].sort((a, b) => {
