@@ -191,7 +191,7 @@ const RollingForecast: React.FC = () => {
       if (user) {
         try {
           const savedForecastData = await DataPersistenceManager.getRollingForecastDataByUser(user.name);
-          if (savedForecastData.length > 0) {
+          if (savedForecastData && savedForecastData.length > 0) {
             console.log('Loading saved forecast data for', user.name, ':', savedForecastData.length, 'items');
 
             // Update monthly forecast data from saved data
@@ -199,10 +199,10 @@ const RollingForecast: React.FC = () => {
 
             savedForecastData.forEach(savedItem => {
               const matchingRow = tableData.find(row =>
-                row.customer === savedItem.customer && row.item === savedItem.item
+                row?.customer === savedItem?.customer && row?.item === savedItem?.item
               );
 
-              if (matchingRow && savedItem.forecastData) {
+              if (matchingRow && savedItem?.forecastData) {
                 updatedMonthlyData[matchingRow.id] = savedItem.forecastData;
               }
             });
