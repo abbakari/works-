@@ -143,11 +143,17 @@ export class DataPersistenceManager {
     try {
       const response = await apiService.getForecasts();
       if (response.error) {
-        throw new Error(response.error);
+        console.warn('API returned error for rolling forecast data:', response.error);
+        return [];
       }
-      return response.data || [];
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
-      console.error('Error loading rolling forecast data via API:', error);
+      // Handle fetch failures gracefully - this is expected when backend is not running
+      if (error instanceof Error && error.message.includes('Failed to fetch')) {
+        console.log('Backend not available for rolling forecast data - working in offline mode');
+      } else {
+        console.warn('Error loading rolling forecast data via API:', error);
+      }
       return [];
     }
   }
