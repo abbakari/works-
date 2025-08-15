@@ -42,10 +42,10 @@ export class SalesBudgetService {
   async getAllBudgets(): Promise<SalesBudgetItem[]> {
     try {
       const response = await apiService.getBudgets();
-      if (response.data && response.data.results) {
+      if (response.data && response.data.results && Array.isArray(response.data.results)) {
         return response.data.results.map(this.transformBackendToFrontend);
       }
-      throw new Error('No budget data received');
+      throw new Error('No budget data received or data is not an array');
     } catch (error) {
       console.warn('Failed to fetch budgets from API, using sample data:', error);
       // Return sample data when API is not available
