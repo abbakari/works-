@@ -222,7 +222,12 @@ const RollingForecast: React.FC = () => {
             );
           }
         } catch (error) {
-          console.error('Error loading saved forecast data:', error);
+          // Handle API failures gracefully - this is expected when backend is not running
+          if (error instanceof Error && error.message.includes('Failed to fetch')) {
+            console.log('Backend not available - forecast data will be managed locally');
+          } else {
+            console.warn('Error loading saved forecast data:', error);
+          }
         }
       }
     };
