@@ -355,11 +355,11 @@ const SalesBudget: React.FC = () => {
             git: budget.git,
             discount: 0
           })),
-          // Legacy compatibility
-          budget2025: budget.budget_2025,
-          actual2025: budget.actual_2025,
-          budget2026: budget.budget_2026,
-          budgetValue2026: finalBudgetValue
+          // Legacy compatibility - using SavedBudgetData fields
+          budget2025: budget.budget2025,
+          actual2025: budget.actual2025,
+          budget2026: budget.budget2026,
+          budgetValue2026: budget.budgetValue2026 || finalBudgetValue
         };
       });
 
