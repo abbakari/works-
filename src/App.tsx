@@ -149,13 +149,15 @@ const AppRoutes: React.FC = () => {
         } 
       />
 
-      <Route 
-        path="/rolling-forecast" 
+      <Route
+        path="/rolling-forecast"
         element={
-          <RoleBasedRoute allowedRoles={['salesman', 'manager', 'admin']}>
-            <RollingForecast />
-          </RoleBasedRoute>
-        } 
+          <ProtectedRoute>
+            <RoleBasedRoute allowedRoles={['salesman', 'manager', 'admin']}>
+              <RollingForecast />
+            </RoleBasedRoute>
+          </ProtectedRoute>
+        }
       />
 
       {/* Manager Routes */}
