@@ -1972,54 +1972,43 @@ const RollingForecast: React.FC = () => {
         isOpen={isNewAdditionModalOpen}
         onClose={() => setIsNewAdditionModalOpen(false)}
         onAdd={async (data) => {
-          console.log('New addition:', data);
-          
-          // Save to backend first
+          console.log('New addition for Rolling Forecast:', data);
+
+          if (!user) {
+            alert('Please log in to add new items');
+            return;
+          }
+
+          // Create new forecast entry using DataPersistenceManager
           try {
-            const response = await fetch('http://localhost:8000/api/inventory/forecast/create/', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(data)
-            });
-            
-            if (response.ok) {
-              const savedEntry = await response.json();
-              // Add new row to table data with backend ID
-              setTableData(prev => [...prev, savedEntry]);
-              console.log('✅ Forecast entry saved to database');
-            } else {
-              console.error('❌ Failed to save forecast entry');
-              // Still add to frontend as fallback
-              const newRow = {
-                id: `temp_${Date.now()}`,
-                customer: data.customer,
-                item: data.item,
-                bud25: 0,
-                ytd25: 0,
-                forecast: 0,
-                stock: 0,
-                git: 0,
-                eta: ''
-              };
-              setTableData(prev => [...prev, newRow]);
-            }
-          } catch (error) {
-            console.error('❌ Error saving forecast entry:', error);
-            // Fallback to frontend-only
-            const newRow = {
-              id: `temp_${Date.now()}`,
+            const newForecastItem: SavedForecastData = {
+              id: `temp_${Date.now()}`, // Temporary ID, backend will assign real ID
               customer: data.customer,
               item: data.item,
-              bud25: 0,
-              ytd25: 0,
-              forecast: 0,
-              stock: 0,
-              git: 0,
-              eta: ''
+              category: 'General',
+              brand: 'Generic',
+              type: 'rolling_forecast',
+              createdBy: user.name,
+              createdAt: new Date().toISOString(),
+              lastModified: new Date().toISOString(),
+              forecastTotal: 0,
+              status: 'draft',
+              forecastData: {}
             };
-            setTableData(prev => [...prev, newRow]);
+
+            // Save to backend via DataPersistenceManager
+            await DataPersistenceManager.saveRollingForecastData([newForecastItem]);
+            console.log('✅ Forecast entry saved to database via API');
+
+            // Also create corresponding budget entry for synchronization
+            await DataPersistenceManager.syncForecastToBudget(newForecastItem);
+
+            // Reload data from backend to get the real ID and updated data
+            await loadForecastData();
+
+          } catch (error) {
+            console.error('❌ Failed to save forecast entry:', error);
+            alert('Failed to save forecast entry. Please check your connection and try again.');
           }
         }}
       />
