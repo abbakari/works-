@@ -212,40 +212,53 @@ const RollingForecast: React.FC = () => {
 
   // Load saved forecast data for current user
   useEffect(() => {
-    if (user) {
-      const savedForecastData = DataPersistenceManager.getRollingForecastDataByUser(user.name);
-      if (savedForecastData.length > 0) {
-        console.log('Loading saved forecast data for', user.name, ':', savedForecastData.length, 'items');
+    const loadSavedForecastData = async () => {
+      if (user) {
+        try {
+          const savedForecastData = await DataPersistenceManager.getRollingForecastDataByUser(user.name);
+          if (savedForecastData && savedForecastData.length > 0) {
+            console.log('Loading saved forecast data for', user.name, ':', savedForecastData.length, 'items');
 
-        // Update monthly forecast data from saved data
-        const updatedMonthlyData: {[key: string]: {[month: string]: number}} = {};
+            // Update monthly forecast data from saved data
+            const updatedMonthlyData: {[key: string]: {[month: string]: number}} = {};
 
-        savedForecastData.forEach(savedItem => {
-          const matchingRow = tableData.find(row =>
-            row.customer === savedItem.customer && row.item === savedItem.item
-          );
+            savedForecastData.forEach(savedItem => {
+              const matchingRow = tableData.find(row =>
+                row?.customer === savedItem?.customer && row?.item === savedItem?.item
+              );
 
-          if (matchingRow && savedItem.forecastData) {
-            updatedMonthlyData[matchingRow.id] = savedItem.forecastData;
+              if (matchingRow && savedItem?.forecastData) {
+                updatedMonthlyData[matchingRow.id] = savedItem.forecastData;
+              }
+            });
+
+            setMonthlyForecastData(updatedMonthlyData);
+
+            // Update table data with forecast totals
+            setTableData(prevData =>
+              prevData.map(row => {
+                const rowData = updatedMonthlyData[row.id];
+                if (rowData) {
+                  const forecastTotal = Object.values(rowData).reduce((sum, value) => sum + (value || 0), 0);
+                  return { ...row, forecast: forecastTotal };
+                }
+                return row;
+              })
+            );
           }
-        });
-
-        setMonthlyForecastData(updatedMonthlyData);
-
-        // Update table data with forecast totals
-        setTableData(prevData =>
-          prevData.map(row => {
-            const rowData = updatedMonthlyData[row.id];
-            if (rowData) {
-              const forecastTotal = Object.values(rowData).reduce((sum, value) => sum + (value || 0), 0);
-              return { ...row, forecast: forecastTotal };
-            }
-            return row;
-          })
-        );
+        } catch (error) {
+          // Handle API failures gracefully - this is expected when backend is not running
+          if (error instanceof Error && error.message.includes('Failed to fetch')) {
+            console.log('Backend not available - forecast data will be managed locally');
+          } else {
+            console.warn('Error loading saved forecast data:', error);
+          }
+        }
       }
-    }
-  }, [user]);
+    };
+
+    loadSavedForecastData();
+  }, [user, tableData]);
 
   // Load global stock data set by admin
   const loadGlobalStockData = () => {
@@ -286,17 +299,22 @@ const RollingForecast: React.FC = () => {
     // Load global stock data from admin
     loadGlobalStockData();
 
-    const updateGitDataInTable = () => {
-      setTableData(prevData =>
-        prevData.map(row => {
-          const gitSummary = DataPersistenceManager.getGitSummaryForItem(row.customer, row.item);
+    const updateGitDataInTable = async () => {
+      const updatedTableData = await Promise.all(tableData.map(async (row) => {
+        try {
+          const gitSummary = await DataPersistenceManager.getGitSummaryForItem(row.customer, row.item);
           return {
             ...row,
             git: gitSummary.gitQuantity,
             eta: gitSummary.eta ? new Date(gitSummary.eta).toLocaleDateString() : ''
           };
-        })
-      );
+        } catch (error) {
+          console.error('Error getting GIT summary for', row.customer, row.item, error);
+          return row;
+        }
+      }));
+      
+      setTableData(updatedTableData);
     };
 
     // Update GIT data on component mount
@@ -309,7 +327,7 @@ const RollingForecast: React.FC = () => {
     }, 30000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [tableData]);
 
   const categories = ['TYRE SERVICE'];
   const brands = ['TYRE SERVICE'];
@@ -393,7 +411,7 @@ const RollingForecast: React.FC = () => {
             item: row?.item || 'Unknown',
             category: 'TYRE SERVICE',
             brand: 'Various',
-            type: 'rolling_forecast',
+            type: 'rolling_forecast' as const,
             createdBy: user.name,
             createdAt: new Date().toISOString(),
             lastModified: new Date().toISOString(),
@@ -419,8 +437,8 @@ const RollingForecast: React.FC = () => {
         const workflowId = await submitForApproval([], forecastData);
 
         // Save original data and create submission copies
-        DataPersistenceManager.saveRollingForecastData(savedForecastData);
-        DataPersistenceManager.saveSubmissionCopies([], savedForecastData, workflowId);
+        await DataPersistenceManager.saveRollingForecastData(savedForecastData);
+        await DataPersistenceManager.saveSubmissionCopies([], savedForecastData, workflowId);
 
         // Update status to track submission without removing original data
         savedForecastData.forEach(item => {
@@ -679,15 +697,16 @@ const RollingForecast: React.FC = () => {
 
   // Generate customer forecast data for the modal
   const generateCustomerForecastData = (customerName: string) => {
-    const customerRows = tableData.filter(row => row.customer === customerName);
+    const safeTableData = Array.isArray(tableData) ? tableData : [];
+    const customerRows = safeTableData.filter(row => row?.customer === customerName);
     if (customerRows.length === 0) return null;
 
     // Calculate totals based on forecast data
-    const totalBudgetUnits = customerRows.reduce((sum, row) => sum + row.bud25, 0);
-    const totalActualUnits = customerRows.reduce((sum, row) => sum + row.ytd25, 0);
+    const totalBudgetUnits = customerRows.reduce((sum, row) => sum + (row?.bud25 || 0), 0);
+    const totalActualUnits = customerRows.reduce((sum, row) => sum + (row?.ytd25 || 0), 0);
     const totalForecastUnits = customerRows.reduce((sum, row) => {
-      const monthlyData = getMonthlyData(row.id);
-      return sum + Object.values(monthlyData).reduce((total, value) => total + (value || 0), 0);
+      const monthlyData = getMonthlyData(row?.id);
+      return sum + Object.values(monthlyData || {}).reduce((total, value) => total + (value || 0), 0);
     }, 0);
 
     const totalBudgetValue = totalBudgetUnits * 100; // Assuming average rate
@@ -812,8 +831,9 @@ const RollingForecast: React.FC = () => {
 
   // Calculate inventory insights
   const calculateInventoryInsights = () => {
-    const totalStock = tableData.reduce((sum, row) => sum + row.stock, 0);
-    const totalGit = tableData.reduce((sum, row) => sum + row.git, 0);
+    const safeTableData = Array.isArray(tableData) ? tableData : [];
+    const totalStock = safeTableData.reduce((sum, row) => sum + (row?.stock || 0), 0);
+    const totalGit = safeTableData.reduce((sum, row) => sum + (row?.git || 0), 0);
     const totalDemand = calculateSummaryStats().forecast;
     
     const stockTurnover = totalDemand > 0 ? (totalStock / totalDemand) * 12 : 0;
@@ -833,11 +853,12 @@ const RollingForecast: React.FC = () => {
   const summaryStats = calculateSummaryStats();
   const inventoryInsights = calculateInventoryInsights();
 
-  const filteredData = tableData.filter((item: any) => {
-    return (!selectedCustomer || item.customer.includes(selectedCustomer)) &&
+  const safeTableDataForFilter = Array.isArray(tableData) ? tableData : [];
+  const filteredData = safeTableDataForFilter.filter((item: any) => {
+    return (!selectedCustomer || item?.customer?.includes(selectedCustomer)) &&
            (!selectedCategory || categories.includes(selectedCategory)) &&
            (!selectedBrand || brands.includes(selectedBrand)) &&
-           (!selectedItem || item.item.includes(selectedItem));
+           (!selectedItem || item?.item?.includes(selectedItem));
   });
 
   const sortedData = [...filteredData].sort((a, b) => {
@@ -1325,10 +1346,9 @@ const RollingForecast: React.FC = () => {
           <div className="mb-6">
             <DataPreservationIndicator
               itemsCount={tableData.length}
-              submittedCount={DataPersistenceManager.getSubmittedRollingForecastData().filter(item => item.createdBy === user.name).length}
-              preservedCount={DataPersistenceManager.getOriginalRollingForecastData().filter(item => item.createdBy === user.name).length}
               dataType="forecast"
               compact={true}
+              user={user}
             />
           </div>
         )}
@@ -1343,7 +1363,7 @@ const RollingForecast: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {(() => {
                 // Calculate customer-specific totals
-                const customerTotals = tableData.reduce((acc, row) => {
+                const customerTotals: Record<string, {budget: number, sales: number, forecast: number, items: number}> = tableData.reduce((acc, row) => {
                   const monthlyData = getMonthlyData(row.id);
                   const customerForecast = Object.values(monthlyData).reduce((sum, value) => sum + (value || 0), 0);
 
@@ -1719,7 +1739,18 @@ const RollingForecast: React.FC = () => {
                       <td className="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-900">
                         <GitDetailsTooltip customer={row.customer} item={row.item}>
                           {(() => {
+                            // Get GIT summary synchronously (assuming it's not a promise in this context)
                             const gitSummary = DataPersistenceManager.getGitSummaryForItem(row.customer, row.item);
+                            
+                            // Handle potential promise return
+                            if (gitSummary instanceof Promise) {
+                              return (
+                                <div className="text-center text-gray-500">
+                                  Loading...
+                                </div>
+                              );
+                            }
+                            
                             const hasGitData = gitSummary.gitQuantity > 0;
 
                             return (
@@ -1756,6 +1787,11 @@ const RollingForecast: React.FC = () => {
                       <td className="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-900">
                         {(() => {
                           const gitSummary = DataPersistenceManager.getGitSummaryForItem(row.customer, row.item);
+                          
+                          // Handle potential promise return
+                          if (gitSummary instanceof Promise) {
+                            return <span className="text-gray-400">-</span>;
+                          }
 
                           if (gitSummary.eta) {
                             const etaDate = new Date(gitSummary.eta);

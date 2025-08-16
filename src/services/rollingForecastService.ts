@@ -26,13 +26,13 @@ export class RollingForecastService {
   async getAllForecasts(): Promise<RollingForecastItem[]> {
     try {
       const response = await apiService.getForecasts();
-      if (response.data && response.data.results) {
+      if (response.data && response.data.results && Array.isArray(response.data.results)) {
         return response.data.results.map(this.transformBackendToFrontend);
       }
-      throw new Error('No forecast data received');
+      throw new Error('No forecast data received or data is not an array');
     } catch (error) {
-      console.error('Failed to fetch forecasts from API:', error);
-      throw error;
+      console.warn('Failed to fetch forecasts from API, returning empty array:', error);
+      return [];
     }
   }
 

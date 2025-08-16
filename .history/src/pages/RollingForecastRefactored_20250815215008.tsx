@@ -1,0 +1,16 @@
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import Layout from '../components/Layout';
+import { ChevronRight, Eye, CheckCircle, Plus, ChevronUp, ChevronDown, Minus, X, List, UserPlus, Target, Send, Download as DownloadIcon, Package, Calendar, AlertTriangle } from 'lucide-react';
+import { Customer } from '../types/forecast';
+import { useBudget } from '../contexts/BudgetContext';
+import { useAuth } from '../contexts/AuthContext';
+import { useWorkflow } from '../contexts/WorkflowContext';
+import { rollingForecastService, RollingForecastItem as APIRollingForecastItem } from '../services/rollingForecastService';
+import CustomerForecastModal from '../components/CustomerForecastModal';
+import GitDetailsTooltip from '../components/GitDetailsTooltip';
+import ViewOnlyMonthlyDistributionModal from '../components/ViewOnlyMonthlyDistributionModal';
+import NewAdditionModal from '../components/NewAdditionModal';
+import FollowBacksButton from '../components/FollowBacksButton';
+import SalesmanStockManagement from '../components/SalesmanStockManagement';
+import ManagerStockManagement from '../components/ManagerStockManagement';
+import ManagerRollingForecastInterface from '../components/ManagerRollingForecastInterface';

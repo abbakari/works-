@@ -14,18 +14,25 @@ const GitSummaryWidget: React.FC<GitSummaryWidgetProps> = ({ userRole, compact =
 
   // Initialize and load GIT data
   useEffect(() => {
-    const loadGitData = () => {
-      // Initialize sample GIT data if none exists
-      const initialized = initializeSampleGitData();
-      if (initialized) {
-        console.log('Sample GIT data initialized for GitSummaryWidget');
-      }
+    const loadGitData = async () => {
+      try {
+        // Initialize sample GIT data if none exists
+        const initialized = initializeSampleGitData();
+        if (initialized) {
+          console.log('Sample GIT data initialized for GitSummaryWidget');
+        }
 
-      // Load GIT data
-      const gitData = DataPersistenceManager.getGitData();
-      console.log('Loaded GIT data in GitSummaryWidget:', gitData.length, 'items');
-      setAllGitData(gitData);
-      setLastUpdate(new Date());
+        // Load GIT data
+        const gitData = await DataPersistenceManager.getGitData();
+        // Ensure gitData is always an array
+        const safeGitData = Array.isArray(gitData) ? gitData : [];
+        console.log('Loaded GIT data in GitSummaryWidget:', safeGitData.length, 'items');
+        setAllGitData(safeGitData);
+        setLastUpdate(new Date());
+      } catch (error) {
+        console.error('Error loading GIT data:', error);
+        setAllGitData([]);
+      }
     };
 
     // Load data initially
@@ -37,25 +44,27 @@ const GitSummaryWidget: React.FC<GitSummaryWidgetProps> = ({ userRole, compact =
     return () => clearInterval(interval);
   }, []);
   
-  // Calculate summary metrics
-  const totalGitItems = allGitData.length;
-  const totalGitQuantity = allGitData.reduce((sum, item) => sum + item.gitQuantity, 0);
-  const totalGitValue = allGitData.reduce((sum, item) => sum + item.estimatedValue, 0);
-  
+  // Calculate summary metrics with safety checks
+  const safeGitData = Array.isArray(allGitData) ? allGitData : [];
+  const totalGitItems = safeGitData.length;
+  const totalGitQuantity = safeGitData.reduce((sum, item) => sum + (item?.gitQuantity || 0), 0);
+  const totalGitValue = safeGitData.reduce((sum, item) => sum + (item?.estimatedValue || 0), 0);
+
   // Status breakdown
-  const statusCounts = allGitData.reduce((acc, item) => {
-    acc[item.status] = (acc[item.status] || 0) + 1;
+  const statusCounts = safeGitData.reduce((acc, item) => {
+    const status = item?.status || 'unknown';
+    acc[status] = (acc[status] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
   // Overdue items
-  const overdueItems = allGitData.filter(item => 
-    item.eta && new Date(item.eta) < new Date()
+  const overdueItems = safeGitData.filter(item =>
+    item?.eta && new Date(item.eta) < new Date()
   ).length;
 
   // Items arriving soon (within 7 days)
-  const upcomingItems = allGitData.filter(item => {
-    if (!item.eta) return false;
+  const upcomingItems = safeGitData.filter(item => {
+    if (!item?.eta) return false;
     const eta = new Date(item.eta);
     const now = new Date();
     const daysDiff = Math.ceil((eta.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -164,7 +173,7 @@ const GitSummaryWidget: React.FC<GitSummaryWidgetProps> = ({ userRole, compact =
           <Clock className="w-6 h-6 text-orange-600 mx-auto mb-2" />
           <div className="text-sm text-orange-600 mb-1">Avg Lead Time</div>
           <div className="text-2xl font-bold text-orange-700">
-            {allGitData.length > 0 ? Math.round(allGitData.reduce((sum, item) => sum + (item.leadTimeDays || 14), 0) / allGitData.length) : 0} days
+            {safeGitData.length > 0 ? Math.round(safeGitData.reduce((sum, item) => sum + (item?.leadTimeDays || 14), 0) / safeGitData.length) : 0} days
           </div>
         </div>
       </div>
