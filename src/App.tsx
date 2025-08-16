@@ -105,7 +105,7 @@ const RoleBasedRoute: React.FC<{
   }
 
   if (!allowedRoles.includes(user.role)) {
-    return <Navigate to="/rolling-forecast" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;
