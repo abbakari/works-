@@ -2459,61 +2459,64 @@ const SalesBudget: React.FC = () => {
           isOpen={isNewAdditionModalOpen}
           onClose={() => setIsNewAdditionModalOpen(false)}
           onAdd={async (data) => {
-            console.log('New addition:', data);
-            
-            // Save to backend first
+            console.log('New addition for Sales Budget:', data);
+
+            if (!user) {
+              alert('Please log in to add new items');
+              return;
+            }
+
+            // Create new budget entry using DataPersistenceManager
             try {
-              const response = await fetch('http://localhost:8000/api/inventory/forecast/create/', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-              });
-              
-              if (response.ok) {
-                const savedEntry = await response.json();
-                
-                // Create new budget row with the saved data
-                const newRow = {
-                  id: Math.max(...originalTableData.map(item => item.id)) + 1,
-                  selected: false,
-                  customer: data.customer,
-                  item: data.item,
-                  category: 'General',
-                  brand: 'Generic',
-                  itemCombined: `${data.item} (General - Generic)`,
-                  yearlyBudgets: { [selectedTargetYear]: 0 },
-                  yearlyActuals: { [selectedBaseYear]: 0 },
-                  yearlyValues: { [selectedTargetYear]: 0 },
+              const newBudgetItem: SavedBudgetData = {
+                id: `temp_${Date.now()}`, // Temporary ID, backend will assign real ID
+                customer: data.customer,
+                item: data.item,
+                category: 'General',
+                brand: 'Generic',
+                type: 'sales_budget',
+                createdBy: user.name,
+                createdAt: new Date().toISOString(),
+                lastModified: new Date().toISOString(),
+                budget2025: 0,
+                actual2025: 0,
+                budget2026: 0,
+                rate: 100,
+                stock: 0,
+                git: 0,
+                budgetValue2026: 0,
+                discount: 0,
+                monthlyData: months.map(month => ({
+                  month: month.short,
+                  budgetValue: 0,
+                  actualValue: 0,
                   rate: 100,
                   stock: 0,
                   git: 0,
-                  discount: 0,
-                  monthlyData: months.map(month => ({
-                    month: month.short,
-                    budgetValue: 0,
-                    actualValue: 0,
-                    rate: 100,
-                    stock: 0,
-                    git: 0,
-                    discount: 0
-                  })),
-                  budget2025: 0,
-                  actual2025: 0,
-                  budget2026: 0,
-                  budgetValue2026: 0
-                };
-                
-                setOriginalTableData(prev => [...prev, newRow]);
-                showNotification(`✅ Customer-item combination added successfully to budget table`, 'success');
-              } else {
-                console.error('❌ Failed to save to backend');
-                showNotification('❌ Failed to save to database, but added to table', 'error');
+                  discount: 0
+                })),
+                status: 'draft'
+              };
+
+              // Save to backend via DataPersistenceManager
+              await DataPersistenceManager.saveSalesBudgetData([newBudgetItem]);
+              console.log('✅ Budget entry saved to database via API');
+
+              // Also create corresponding forecast entry for synchronization
+              await DataPersistenceManager.syncBudgetToForecast(newBudgetItem);
+
+              // Reload data to reflect the changes and get real IDs
+              const savedBudgetData = DataPersistenceManager.getSalesBudgetDataByUser(user.name);
+              if (savedBudgetData) {
+                console.log('Reloading budget data after new addition...');
+                // The data loading logic would be handled by existing useEffect hooks
               }
+
+              showNotification(`✅ Customer-item combination added successfully and synced with forecast`, 'success');
+
             } catch (error) {
-              console.error('❌ Error saving:', error);
-              showNotification('❌ Error saving to database, but added to table', 'error');
+              console.error('❌ Failed to save budget entry:', error);
+              showNotification('❌ Failed to save to database. Please check your connection and try again.', 'error');
             }
           }}
         />
