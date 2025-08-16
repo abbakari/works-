@@ -32,7 +32,7 @@ const ProtectedRoute: React.FC<{
   }
 
   if (requiredDashboard && !canAccessDashboard(user, requiredDashboard)) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/rolling-forecast" replace />;
   }
 
   return <>{children}</>;
@@ -50,7 +50,7 @@ const RoleBasedRoute: React.FC<{
   }
 
   if (!allowedRoles.includes(user.role)) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/rolling-forecast" replace />;
   }
 
   return <>{children}</>;
@@ -70,10 +70,10 @@ const AppRoutes: React.FC = () => {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
+      <Route path="/login" element={user ? <Navigate to="/rolling-forecast" replace /> : <Login />} />
 
       {/* Protected Routes */}
-      <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} />
+      <Route path="/" element={user ? <Navigate to="/rolling-forecast" replace /> : <Navigate to="/login" replace />} />
       
       <Route 
         path="/dashboard" 
