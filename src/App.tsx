@@ -20,60 +20,6 @@ import AdminInventoryDashboard from './pages/AdminInventoryDashboard';
 import AdvancedAdminDashboard from './pages/AdvancedAdminDashboard';
 import ApiTest from './pages/ApiTest';
 
-// Mock Auth Wrapper for debugging API
-const MockAuthWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isSetup, setIsSetup] = useState(false);
-
-  useEffect(() => {
-    const setupDemoAuth = async () => {
-      try {
-        // Create a demo user for API testing
-        const demoUser = {
-          id: '1',
-          name: 'Demo User',
-          email: 'demo@stmbudget.com',
-          role: 'admin',
-          department: 'IT',
-          permissions: [],
-          isActive: true,
-          createdAt: new Date().toISOString(),
-          lastLogin: new Date().toISOString()
-        };
-
-        // Store demo user for frontend context
-        localStorage.setItem('user', JSON.stringify(demoUser));
-
-        // Try to authenticate with backend for real API access
-        // If this fails, we'll still have the demo user for frontend
-        try {
-          console.log('Attempting demo authentication...');
-          // For now, just set a demo token - in real scenario you'd get this from login
-          localStorage.setItem('access_token', 'demo_jwt_token_for_testing');
-          console.log('Demo authentication setup complete');
-        } catch (authError) {
-          console.warn('Could not authenticate with backend, using frontend-only mode:', authError);
-        }
-
-        setIsSetup(true);
-      } catch (error) {
-        console.error('Error setting up demo auth:', error);
-        setIsSetup(true); // Continue anyway
-      }
-    };
-
-    setupDemoAuth();
-  }, []);
-
-  if (!isSetup) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-lg text-gray-700">Setting up API access...</div>
-      </div>
-    );
-  }
-
-  return <>{children}</>;
-};
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ 
