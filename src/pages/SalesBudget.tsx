@@ -304,20 +304,20 @@ const SalesBudget: React.FC = () => {
       const budgets = await DataPersistenceManager.getSalesBudgetData();
       console.log('Loaded budgets from backend:', budgets.length, 'items');
 
-      // Transform backend data to handle dynamic years and apply automatic discounts
+      // Transform SavedBudgetData to SalesBudgetItem format for table display
       const transformedData: SalesBudgetItem[] = budgets.map(budget => {
         // Create dynamic yearly data structure
         const yearlyBudgets: { [year: string]: number } = {};
         const yearlyActuals: { [year: string]: number } = {};
         const yearlyValues: { [year: string]: number } = {};
 
-        // Populate from legacy fields if available
-        if (budget.budget_2025 !== undefined) yearlyBudgets['2025'] = budget.budget_2025;
-        if (budget.actual_2025 !== undefined) yearlyActuals['2025'] = budget.actual_2025;
-        if (budget.budget_2026 !== undefined) yearlyBudgets['2026'] = budget.budget_2026;
+        // Populate from SavedBudgetData fields
+        if (budget.budget2025 !== undefined) yearlyBudgets['2025'] = budget.budget2025;
+        if (budget.actual2025 !== undefined) yearlyActuals['2025'] = budget.actual2025;
+        if (budget.budget2026 !== undefined) yearlyBudgets['2026'] = budget.budget2026;
 
         // Calculate target year budget value with discount
-        const targetYearBudget = yearlyBudgets[selectedTargetYear] || budget.budget_2026 || 0;
+        const targetYearBudget = yearlyBudgets[selectedTargetYear] || budget.budget2026 || 0;
         const baseBudgetValue = targetYearBudget * budget.rate;
 
         // Apply automatic discount based on category and brand
@@ -332,13 +332,13 @@ const SalesBudget: React.FC = () => {
         yearlyValues[selectedTargetYear] = finalBudgetValue;
 
         return {
-          id: budget.id,
+          id: parseInt(budget.id) || 0, // Convert string ID to number for table compatibility
           selected: false,
           customer: budget.customer,
           item: budget.item,
           category: budget.category,
           brand: budget.brand,
-          itemCombined: budget.itemCombined || `${budget.item} (${budget.category} - ${budget.brand})`,
+          itemCombined: `${budget.item} (${budget.category} - ${budget.brand})`,
           yearlyBudgets,
           yearlyActuals,
           yearlyValues,
@@ -346,7 +346,7 @@ const SalesBudget: React.FC = () => {
           stock: budget.stock,
           git: budget.git,
           discount: finalDiscount,
-          monthlyData: budget.monthly_data.length > 0 ? budget.monthly_data : months.map(month => ({
+          monthlyData: budget.monthlyData.length > 0 ? budget.monthlyData : months.map(month => ({
             month: month.short,
             budgetValue: 0,
             actualValue: 0,
