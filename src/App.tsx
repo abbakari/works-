@@ -20,7 +20,6 @@ import AdminInventoryDashboard from './pages/AdminInventoryDashboard';
 import AdvancedAdminDashboard from './pages/AdvancedAdminDashboard';
 import ApiTest from './pages/ApiTest';
 
-
 // Protected Route Component
 const ProtectedRoute: React.FC<{ 
   children: React.ReactNode; 
