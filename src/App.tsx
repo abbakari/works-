@@ -87,7 +87,7 @@ const ProtectedRoute: React.FC<{
   }
 
   if (requiredDashboard && !canAccessDashboard(user, requiredDashboard)) {
-    return <Navigate to="/rolling-forecast" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;
