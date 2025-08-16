@@ -2505,12 +2505,9 @@ const SalesBudget: React.FC = () => {
               // Also create corresponding forecast entry for synchronization
               await DataPersistenceManager.syncBudgetToForecast(newBudgetItem);
 
-              // Reload data to reflect the changes and get real IDs
-              const savedBudgetData = DataPersistenceManager.getSalesBudgetDataByUser(user.name);
-              if (savedBudgetData) {
-                console.log('Reloading budget data after new addition...');
-                // The data loading logic would be handled by existing useEffect hooks
-              }
+              // Reload budget data to reflect the changes and get real IDs from backend
+              console.log('Reloading budget data after new addition...');
+              await loadBudgetData();
 
               showNotification(`✅ Customer-item combination added successfully and synced with forecast`, 'success');
 
