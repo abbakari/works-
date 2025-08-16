@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth, canAccessDashboard } from './contexts/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
