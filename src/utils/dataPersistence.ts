@@ -324,20 +324,24 @@ export class DataPersistenceManager {
 
   // Get only original data (excluding submission copies)
   static getOriginalSalesBudgetData(): SavedBudgetData[] {
-    return this.getSalesBudgetData().filter(item => !item.submissionMetadata);
+    const data = this.getSalesBudgetData();
+    return Array.isArray(data) ? data.filter(item => !item.submissionMetadata) : [];
   }
 
   static getOriginalRollingForecastData(): SavedForecastData[] {
-    return this.getRollingForecastData().filter(item => !item.submissionMetadata);
+    const data = this.getRollingForecastData();
+    return Array.isArray(data) ? data.filter(item => !item.submissionMetadata) : [];
   }
 
   // Get only submitted data (submission copies)
   static getSubmittedSalesBudgetData(): SavedBudgetData[] {
-    return this.getSalesBudgetData().filter(item => item.submissionMetadata);
+    const data = this.getSalesBudgetData();
+    return Array.isArray(data) ? data.filter(item => item.submissionMetadata) : [];
   }
 
   static getSubmittedRollingForecastData(): SavedForecastData[] {
-    return this.getRollingForecastData().filter(item => item.submissionMetadata);
+    const data = this.getRollingForecastData();
+    return Array.isArray(data) ? data.filter(item => item.submissionMetadata) : [];
   }
 
   // Get data by workflow ID
