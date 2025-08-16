@@ -53,81 +53,49 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
   const [exportData, setExportData] = useState<string>('');
 
   useEffect(() => {
-    const loadReportData = () => {
+    const loadReportData = async () => {
       try {
-        // Get all rolling forecast data
-        const savedForecastData = DataPersistenceManager.getRollingForecastData();
-        
-        // Sample table data for demonstration (you may want to replace this with actual data source)
-        const sampleTableData = [
-          {
-            id: '1',
-            customer: 'Action Aid International (Tz)',
-            item: 'BF GOODRICH TYRE 235/85R16 120/116S TL ATT/A KO2 LRERWLGO',
-            brand: 'BF GOODRICH',
-            category: 'TYRE SERVICE',
-            bud25: 120,
-            budgetDistribution: { JAN: 10, FEB: 8, MAR: 12, APR: 15, MAY: 10, JUN: 8, JUL: 12, AUG: 15, SEP: 10, OCT: 8, NOV: 6, DEC: 6 }
-          },
-          {
-            id: '2',
-            customer: 'Action Aid International (Tz)',
-            item: 'BF GOODRICH TYRE 265/65R17 120/117S TL ATT/A KO2 LRERWLGO',
-            brand: 'BF GOODRICH',
-            category: 'TYRE SERVICE',
-            bud25: 80,
-            budgetDistribution: { JAN: 8, FEB: 6, MAR: 10, APR: 12, MAY: 8, JUN: 6, JUL: 10, AUG: 12, SEP: 8, OCT: 0, NOV: 0, DEC: 0 }
-          },
-          {
-            id: '3',
-            customer: 'Action Aid International (Tz)',
-            item: 'MICHELIN TYRE 265/65R17 112T TL LTX TRAIL',
-            brand: 'MICHELIN',
-            category: 'TYRE SERVICE',
-            bud25: 150,
-            budgetDistribution: { JAN: 15, FEB: 12, MAR: 18, APR: 20, MAY: 15, JUN: 12, JUL: 18, AUG: 20, SEP: 15, OCT: 5, NOV: 0, DEC: 0 }
-          },
-          {
-            id: '4',
-            customer: 'ADVENT CONSTRUCTION LTD.',
-            item: 'WHEEL BALANCE ALLOYD RIMS',
-            brand: 'TYRE SERVICE',
-            category: 'TYRE SERVICE',
-            bud25: 200,
-            budgetDistribution: { JAN: 20, FEB: 15, MAR: 25, APR: 30, MAY: 20, JUN: 15, JUL: 25, AUG: 30, SEP: 20, OCT: 0, NOV: 0, DEC: 0 }
-          },
-          {
-            id: '5',
-            customer: 'ADVENT CONSTRUCTION LTD.',
-            item: 'BF GOODRICH TYRE 235/85R16 120/116S TL ATT/A KO2 LRERWLGO',
-            brand: 'BF GOODRICH',
-            category: 'TYRE SERVICE',
-            bud25: 90,
-            budgetDistribution: { JAN: 10, FEB: 8, MAR: 12, APR: 15, MAY: 10, JUN: 8, JUL: 12, AUG: 15, SEP: 0, OCT: 0, NOV: 0, DEC: 0 }
-          }
-        ];
+        setLoading(true);
+        console.log('Loading Rolling Forecast Report data from API...');
 
-        const processedData: ReportData[] = sampleTableData.map(row => {
-          // Get forecast data for this row
-          const forecastEntry = savedForecastData.find(f => 
-            f.customer === row.customer && f.item === row.item
+        // Get real forecast data from API
+        const savedForecastData = await DataPersistenceManager.getRollingForecastData();
+        console.log('Loaded forecast data:', savedForecastData.length, 'items');
+
+        // Get real budget data from API for cross-reference
+        const savedBudgetData = await DataPersistenceManager.getSalesBudgetData();
+        console.log('Loaded budget data:', savedBudgetData.length, 'items');
+
+        // Process real forecast data into report format
+        const processedData: ReportData[] = savedForecastData.map(forecastEntry => {
+          // Find corresponding budget entry for budget year data
+          const budgetEntry = savedBudgetData.find(b =>
+            b.customer === forecastEntry.customer && b.item === forecastEntry.item
           );
 
-          // Get monthly forecast values
+          // Get monthly forecast values from forecast data
           const monthlyForecast = getShortMonthNames().reduce((acc, month) => {
-            acc[month as keyof typeof acc] = forecastEntry?.forecastData?.[month] || 0;
+            const monthKey = month.toUpperCase();
+            acc[monthKey] = forecastEntry.forecastData?.[month] || 0;
             return acc;
           }, {} as Record<string, number>);
 
-          // Calculate totals
-          const forecastTotal = Object.values(monthlyForecast).reduce((sum, val) => sum + val, 0);
+          // Calculate forecast total
+          const forecastTotal = forecastEntry.forecastTotal ||
+            Object.values(monthlyForecast).reduce((sum, val) => sum + val, 0);
+
+          // Get budget year value from budget entry or forecast entry
+          const budgetYearValue = budgetEntry?.budget2026 ||
+            budgetEntry?.budget2025 ||
+            forecastEntry.budgetData?.budget2026 ||
+            0;
 
           return {
-            id: row.id,
-            customer: row.customer,
-            item: row.item,
-            brand: row.brand,
-            category: row.category,
+            id: forecastEntry.id,
+            customer: forecastEntry.customer,
+            item: forecastEntry.item,
+            brand: forecastEntry.brand || 'N/A',
+            category: forecastEntry.category || 'N/A',
             JAN: monthlyForecast.JAN || 0,
             FEB: monthlyForecast.FEB || 0,
             MAR: monthlyForecast.MAR || 0,
@@ -140,21 +108,28 @@ const RollingForecastReport: React.FC<RollingForecastReportProps> = ({ onBack })
             OCT: monthlyForecast.OCT || 0,
             NOV: monthlyForecast.NOV || 0,
             DEC: monthlyForecast.DEC || 0,
-            BUDGET_YEAR: getYearValue(row, selectedBaseYear, 'budget'),
+            BUDGET_YEAR: budgetYearValue,
             FORECAST_YEAR: forecastTotal
           };
         });
 
+        console.log('Processed report data:', processedData.length, 'items');
         setReportData(processedData);
-        setLoading(false);
+
+        if (processedData.length === 0) {
+          console.warn('No forecast data found. Make sure forecast entries exist in the system.');
+        }
+
       } catch (error) {
-        console.error('Error loading report data:', error);
+        console.error('Error loading report data from API:', error);
+        setReportData([]); // Set empty array on error
+      } finally {
         setLoading(false);
       }
     };
 
     loadReportData();
-  }, []);
+  }, [selectedBaseYear, selectedTargetYear]); // Re-load when years change
 
   const handleExport = () => {
     // Create CSV content
