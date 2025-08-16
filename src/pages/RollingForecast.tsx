@@ -2024,7 +2024,8 @@ const RollingForecast: React.FC = () => {
             // Also create corresponding budget entry for synchronization
             await DataPersistenceManager.syncForecastToBudget(newForecastItem);
 
-            // Reload data from backend to get the real ID and updated data
+            // Reload forecast data from backend to get the real ID and updated data
+            console.log('Reloading forecast data after new addition...');
             await loadForecastData();
 
           } catch (error) {
