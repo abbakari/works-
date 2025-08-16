@@ -69,11 +69,11 @@ const AppRoutes: React.FC = () => {
 
   return (
     <Routes>
-      {/* Public Routes */}
-      <Route path="/login" element={user ? <Navigate to="/rolling-forecast" replace /> : <Login />} />
+      {/* Public Routes - Temporarily replaced with Rolling Forecast for debugging */}
+      <Route path="/login" element={<RollingForecast />} />
 
-      {/* Protected Routes */}
-      <Route path="/" element={user ? <Navigate to="/rolling-forecast" replace /> : <Navigate to="/login" replace />} />
+      {/* Protected Routes - Temporarily direct to Rolling Forecast for debugging */}
+      <Route path="/" element={<RollingForecast />} />
       
       <Route 
         path="/dashboard" 
