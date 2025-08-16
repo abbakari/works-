@@ -294,14 +294,15 @@ const SalesBudget: React.FC = () => {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [dataError, setDataError] = useState<string | null>(null);
 
-  // Load data from backend
+  // Load data from backend using DataPersistenceManager for consistency
   const loadBudgetData = async () => {
     try {
       setIsLoadingData(true);
       setDataError(null);
 
-      const budgets = await salesBudgetService.getAllBudgets();
-      console.log('Loaded budgets from backend:', budgets);
+      console.log('Loading Sales Budget data via DataPersistenceManager...');
+      const budgets = await DataPersistenceManager.getSalesBudgetData();
+      console.log('Loaded budgets from backend:', budgets.length, 'items');
 
       // Transform backend data to handle dynamic years and apply automatic discounts
       const transformedData: SalesBudgetItem[] = budgets.map(budget => {
