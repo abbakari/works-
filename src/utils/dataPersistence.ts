@@ -179,12 +179,14 @@ export class DataPersistenceManager {
   // Get data by user (for managers to see salesman data)
   static getSalesBudgetDataByUser(userName?: string): SavedBudgetData[] {
     const allData = this.getSalesBudgetData();
+    if (!Array.isArray(allData)) return [];
     if (!userName) return allData;
     return allData.filter(item => item.createdBy === userName);
   }
 
   static getRollingForecastDataByUser(userName?: string): SavedForecastData[] {
     const allData = this.getRollingForecastData();
+    if (!Array.isArray(allData)) return [];
     if (!userName) return allData;
     return allData.filter(item => item.createdBy === userName);
   }
@@ -192,12 +194,12 @@ export class DataPersistenceManager {
   // Get data by customer (for managers to see customer breakdown)
   static getSalesBudgetDataByCustomer(customerName: string): SavedBudgetData[] {
     const allData = this.getSalesBudgetData();
-    return allData.filter(item => item.customer.toLowerCase().includes(customerName.toLowerCase()));
+    return Array.isArray(allData) ? allData.filter(item => item.customer.toLowerCase().includes(customerName.toLowerCase())) : [];
   }
 
   static getRollingForecastDataByCustomer(customerName: string): SavedForecastData[] {
     const allData = this.getRollingForecastData();
-    return allData.filter(item => item.customer.toLowerCase().includes(customerName.toLowerCase()));
+    return Array.isArray(allData) ? allData.filter(item => item.customer.toLowerCase().includes(customerName.toLowerCase())) : [];
   }
 
   // Update status of saved data while preserving original entry
