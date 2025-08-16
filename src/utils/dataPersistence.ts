@@ -1,5 +1,5 @@
-// Shared data persistence utility for sales budget and forecast data
-// This ensures data saved by salesman is visible to managers
+// Data persistence utility using API only - no localStorage
+// This ensures all data is saved to and retrieved from the backend
 import { apiService } from '../lib/api';
 
 export interface SavedForecastData {
@@ -84,128 +84,111 @@ export interface SavedBudgetData {
 }
 
 export class DataPersistenceManager {
-  // Save sales budget data
+  // Save sales budget data via API
   static async saveSalesBudgetData(data: SavedBudgetData[]): Promise<void> {
     try {
+      console.log('Saving sales budget data via API:', data.length, 'items');
+      
       // For each item, either create or update via API
       for (const item of data) {
-        if (item.id) {
+        if (item.id && !item.id.includes('temp_')) {
           // Update existing item
-          await apiService.updateBudget(item.id as any, item);
+          console.log('Updating budget item:', item.id);
+          await apiService.updateBudget(parseInt(item.id), item);
         } else {
           // Create new item
-          await apiService.createBudget(item);
+          console.log('Creating new budget item:', item.customer, item.item);
+          const response = await apiService.createBudget(item);
+          console.log('Created budget item with response:', response);
         }
       }
-      console.log('Sales budget data saved successfully via API:', data.length, 'items');
+      console.log('Sales budget data saved successfully via API');
     } catch (error) {
       console.error('Error saving sales budget data via API:', error);
       throw error;
     }
   }
 
-  // Get sales budget data
+  // Get sales budget data via API
   static async getSalesBudgetData(): Promise<SavedBudgetData[]> {
     try {
-<<<<<<< HEAD
-      const data = localStorage.getItem(SALES_BUDGET_STORAGE_KEY);
-      const parsed = data ? JSON.parse(data) : [];
-      return Array.isArray(parsed) ? parsed : [];
-=======
+      console.log('Loading sales budget data from API...');
       const response = await apiService.getBudgets();
+      
       if (response.error) {
         throw new Error(response.error);
       }
-      return response.data || [];
->>>>>>> refs/remotes/origin/main
+      
+      const data = response.data || [];
+      console.log('Successfully loaded', data.length, 'budget items from API');
+      return Array.isArray(data) ? data : [];
     } catch (error) {
       console.error('Error loading sales budget data via API:', error);
-      return [];
+      // Don't fallback to localStorage - throw error to show user that API is required
+      throw new Error('Failed to load budget data from server. Please ensure backend is running and you are authenticated.');
     }
   }
 
-  // Save rolling forecast data
+  // Save rolling forecast data via API
   static async saveRollingForecastData(data: SavedForecastData[]): Promise<void> {
     try {
+      console.log('Saving rolling forecast data via API:', data.length, 'items');
+      
       // For each item, either create or update via API
       for (const item of data) {
-        if (item.id) {
+        if (item.id && !item.id.includes('temp_')) {
           // Update existing item
-          await apiService.updateForecast(item.id as any, item);
+          console.log('Updating forecast item:', item.id);
+          await apiService.updateForecast(parseInt(item.id), item);
         } else {
           // Create new item
-          await apiService.createForecast(item);
+          console.log('Creating new forecast item:', item.customer, item.item);
+          const response = await apiService.createForecast(item);
+          console.log('Created forecast item with response:', response);
         }
       }
-      console.log('Rolling forecast data saved successfully via API:', data.length, 'items');
+      console.log('Rolling forecast data saved successfully via API');
     } catch (error) {
       console.error('Error saving rolling forecast data via API:', error);
       throw error;
     }
   }
 
-  // Get rolling forecast data
+  // Get rolling forecast data via API
   static async getRollingForecastData(): Promise<SavedForecastData[]> {
     try {
-<<<<<<< HEAD
-      const data = localStorage.getItem(ROLLING_FORECAST_STORAGE_KEY);
-      const parsed = data ? JSON.parse(data) : [];
-      return Array.isArray(parsed) ? parsed : [];
-=======
+      console.log('Loading rolling forecast data from API...');
       const response = await apiService.getForecasts();
+      
       if (response.error) {
         console.warn('API returned error for rolling forecast data:', response.error);
-        return [];
+        throw new Error(response.error);
       }
-      return Array.isArray(response.data) ? response.data : [];
->>>>>>> refs/remotes/origin/main
+      
+      const data = response.data || [];
+      console.log('Successfully loaded', data.length, 'forecast items from API');
+      return Array.isArray(data) ? data : [];
     } catch (error) {
-      // Handle fetch failures gracefully - this is expected when backend is not running
-      if (error instanceof Error && error.message.includes('Failed to fetch')) {
-        console.log('Backend not available for rolling forecast data - working in offline mode');
-      } else {
-        console.warn('Error loading rolling forecast data via API:', error);
-      }
-      return [];
+      console.error('Error loading rolling forecast data via API:', error);
+      // Don't fallback to localStorage - throw error to show user that API is required
+      throw new Error('Failed to load forecast data from server. Please ensure backend is running and you are authenticated.');
     }
   }
 
   // Get data by user (for managers to see salesman data)
-<<<<<<< HEAD
-  static getSalesBudgetDataByUser(userName?: string): SavedBudgetData[] {
-    const allData = this.getSalesBudgetData();
-    if (!Array.isArray(allData)) return [];
-=======
   static async getSalesBudgetDataByUser(userName?: string): Promise<SavedBudgetData[]> {
     const allData = await this.getSalesBudgetData();
->>>>>>> refs/remotes/origin/main
     if (!userName) return allData;
     return allData.filter(item => item.createdBy === userName);
   }
 
-<<<<<<< HEAD
-  static getRollingForecastDataByUser(userName?: string): SavedForecastData[] {
-    const allData = this.getRollingForecastData();
-    if (!Array.isArray(allData)) return [];
-=======
   static async getRollingForecastDataByUser(userName?: string): Promise<SavedForecastData[]> {
     const allData = await this.getRollingForecastData();
->>>>>>> refs/remotes/origin/main
     if (!userName) return allData;
     return allData.filter(item => item.createdBy === userName);
   }
 
   // Get data by customer (for managers to see customer breakdown)
-<<<<<<< HEAD
-  static getSalesBudgetDataByCustomer(customerName: string): SavedBudgetData[] {
-    const allData = this.getSalesBudgetData();
-    return Array.isArray(allData) ? allData.filter(item => item.customer.toLowerCase().includes(customerName.toLowerCase())) : [];
-  }
-
-  static getRollingForecastDataByCustomer(customerName: string): SavedForecastData[] {
-    const allData = this.getRollingForecastData();
-    return Array.isArray(allData) ? allData.filter(item => item.customer.toLowerCase().includes(customerName.toLowerCase())) : [];
-=======
   static async getSalesBudgetDataByCustomer(customerName: string): Promise<SavedBudgetData[]> {
     const allData = await this.getSalesBudgetData();
     return allData.filter(item => item.customer.toLowerCase().includes(customerName.toLowerCase()));
@@ -214,7 +197,6 @@ export class DataPersistenceManager {
   static async getRollingForecastDataByCustomer(customerName: string): Promise<SavedForecastData[]> {
     const allData = await this.getRollingForecastData();
     return allData.filter(item => item.customer.toLowerCase().includes(customerName.toLowerCase()));
->>>>>>> refs/remotes/origin/main
   }
 
   // Update status of saved data while preserving original entry
@@ -224,7 +206,7 @@ export class DataPersistenceManager {
       const itemToUpdate = allData.find(item => item.id === itemId);
       if (itemToUpdate) {
         const updatedItem = { ...itemToUpdate, status, lastModified: new Date().toISOString() };
-        await apiService.updateBudget(itemId as any, updatedItem);
+        await apiService.updateBudget(parseInt(itemId), updatedItem);
         console.log(`Sales budget status updated via API: ${itemId} -> ${status}`);
       }
     } catch (error) {
@@ -239,7 +221,7 @@ export class DataPersistenceManager {
       const itemToUpdate = allData.find(item => item.id === itemId);
       if (itemToUpdate) {
         const updatedItem = { ...itemToUpdate, status, lastModified: new Date().toISOString() };
-        await apiService.updateForecast(itemId as any, updatedItem);
+        await apiService.updateForecast(parseInt(itemId), updatedItem);
         console.log(`Rolling forecast status updated via API: ${itemId} -> ${status}`);
       }
     } catch (error) {
@@ -288,11 +270,6 @@ export class DataPersistenceManager {
       console.error('Error saving submission copies via API:', error);
       throw error;
     }
-  }
-
-  // Clear all data (admin function) - not implemented for API version
-  static async clearAllData(): Promise<void> {
-    console.warn('Clear all data not implemented for API version');
   }
 
   // Get summary statistics for managers - including submission tracking
@@ -345,39 +322,6 @@ export class DataPersistenceManager {
   }
 
   // Get only original data (excluding submission copies)
-<<<<<<< HEAD
-  static getOriginalSalesBudgetData(): SavedBudgetData[] {
-    const data = this.getSalesBudgetData();
-    return Array.isArray(data) ? data.filter(item => !item.submissionMetadata) : [];
-  }
-
-  static getOriginalRollingForecastData(): SavedForecastData[] {
-    const data = this.getRollingForecastData();
-    return Array.isArray(data) ? data.filter(item => !item.submissionMetadata) : [];
-  }
-
-  // Get only submitted data (submission copies)
-  static getSubmittedSalesBudgetData(): SavedBudgetData[] {
-    const data = this.getSalesBudgetData();
-    return Array.isArray(data) ? data.filter(item => item.submissionMetadata) : [];
-  }
-
-  static getSubmittedRollingForecastData(): SavedForecastData[] {
-    const data = this.getRollingForecastData();
-    return Array.isArray(data) ? data.filter(item => item.submissionMetadata) : [];
-  }
-
-  // Get data by workflow ID
-  static getDataByWorkflowId(workflowId: string): { budgetData: SavedBudgetData[], forecastData: SavedForecastData[] } {
-    const salesData = this.getSalesBudgetData();
-    const forecastDataRaw = this.getRollingForecastData();
-
-    const budgetData = Array.isArray(salesData) ? salesData.filter(item =>
-      item.submissionMetadata?.workflowId === workflowId
-    ) : [];
-
-    const forecastData = Array.isArray(forecastDataRaw) ? forecastDataRaw.filter(item =>
-=======
   static async getOriginalSalesBudgetData(): Promise<SavedBudgetData[]> {
     const data = await this.getSalesBudgetData();
     return data.filter(item => !item.submissionMetadata);
@@ -405,23 +349,96 @@ export class DataPersistenceManager {
       item.submissionMetadata?.workflowId === workflowId
     );
     const forecastData = (await this.getRollingForecastData()).filter(item =>
->>>>>>> refs/remotes/origin/main
       item.submissionMetadata?.workflowId === workflowId
-    ) : [];
+    );
 
     return { budgetData, forecastData };
   }
 
-  // Sync data between budget and forecast (for consistency) - simplified for API version
-  static async syncBudgetToForecast(): Promise<void> {
-    // In API version, data is already synced on the backend
-    console.log('Sync between budget and forecast handled by backend API');
+  // Sync data between budget and forecast (create corresponding entries)
+  static async syncBudgetToForecast(budgetItem: SavedBudgetData): Promise<void> {
+    try {
+      // Check if corresponding forecast item already exists
+      const forecastData = await this.getRollingForecastData();
+      const existingForecast = forecastData.find(
+        item => item.customer === budgetItem.customer && item.item === budgetItem.item
+      );
+
+      if (!existingForecast) {
+        // Create corresponding forecast item
+        const forecastItem: SavedForecastData = {
+          id: `temp_${Date.now()}`, // Temporary ID, backend will assign real ID
+          customer: budgetItem.customer,
+          item: budgetItem.item,
+          category: budgetItem.category,
+          brand: budgetItem.brand,
+          type: 'rolling_forecast',
+          createdBy: budgetItem.createdBy,
+          createdAt: new Date().toISOString(),
+          lastModified: new Date().toISOString(),
+          forecastTotal: budgetItem.budget2026,
+          status: 'draft',
+          forecastData: {}
+        };
+
+        await this.saveRollingForecastData([forecastItem]);
+        console.log('Created corresponding forecast item for budget:', budgetItem.customer, budgetItem.item);
+      }
+    } catch (error) {
+      console.error('Error syncing budget to forecast:', error);
+      // Don't throw - this is a nice-to-have feature
+    }
   }
 
-  // Get GIT data uploaded by admin
+  static async syncForecastToBudget(forecastItem: SavedForecastData): Promise<void> {
+    try {
+      // Check if corresponding budget item already exists
+      const budgetData = await this.getSalesBudgetData();
+      const existingBudget = budgetData.find(
+        item => item.customer === forecastItem.customer && item.item === forecastItem.item
+      );
+
+      if (!existingBudget) {
+        // Create corresponding budget item
+        const budgetItem: SavedBudgetData = {
+          id: `temp_${Date.now()}`, // Temporary ID, backend will assign real ID
+          customer: forecastItem.customer,
+          item: forecastItem.item,
+          category: forecastItem.category,
+          brand: forecastItem.brand,
+          type: 'sales_budget',
+          createdBy: forecastItem.createdBy,
+          createdAt: new Date().toISOString(),
+          lastModified: new Date().toISOString(),
+          budget2025: 0,
+          actual2025: 0,
+          budget2026: forecastItem.forecastTotal,
+          rate: 0,
+          stock: 0,
+          git: 0,
+          budgetValue2026: 0,
+          discount: 0,
+          monthlyData: [],
+          status: 'draft'
+        };
+
+        await this.saveSalesBudgetData([budgetItem]);
+        console.log('Created corresponding budget item for forecast:', forecastItem.customer, forecastItem.item);
+      }
+    } catch (error) {
+      console.error('Error syncing forecast to budget:', error);
+      // Don't throw - this is a nice-to-have feature
+    }
+  }
+
+  // Clear all data (admin function) - not recommended for production
+  static async clearAllData(): Promise<void> {
+    console.warn('Clear all data not implemented for API version for safety');
+  }
+
+  // Placeholder methods for GIT data (would need specific API endpoints)
   static async getGitData() {
     try {
-      // This would need to be implemented with a specific API endpoint
       console.warn('GIT data retrieval not implemented for API version');
       return [];
     } catch (error) {
@@ -430,10 +447,8 @@ export class DataPersistenceManager {
     }
   }
 
-  // Get GIT data for a specific customer and item
   static async getGitDataForItem(customer: string, item: string) {
     try {
-      // This would need to be implemented with a specific API endpoint
       console.warn('GIT data retrieval for item not implemented for API version');
       return [];
     } catch (error) {
@@ -442,31 +457,14 @@ export class DataPersistenceManager {
     }
   }
 
-  // Get aggregated GIT quantity and ETA for customer/item combination
   static async getGitSummaryForItem(customer: string, item: string) {
     try {
-      // This would need to be implemented with a specific API endpoint
       console.warn('GIT summary for item not implemented for API version');
       return { gitQuantity: 0, eta: '', status: 'none', itemCount: 0 };
     } catch (error) {
       console.error('Error calculating GIT summary via API:', error);
       return { gitQuantity: 0, eta: '', status: 'none', itemCount: 0 };
     }
-  }
-
-  // Determine overall status from multiple GIT items
-  private static determineOverallGitStatus(gitItems: any[]) {
-    if (gitItems.length === 0) return 'none';
-
-    const statuses = gitItems.map(item => item.status);
-
-    if (statuses.includes('delayed')) return 'delayed';
-    if (statuses.includes('in_transit')) return 'in_transit';
-    if (statuses.includes('shipped')) return 'shipped';
-    if (statuses.includes('ordered')) return 'ordered';
-    if (statuses.every(status => status === 'arrived')) return 'arrived';
-
-    return 'mixed';
   }
 }
 
