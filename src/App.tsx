@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth, canAccessDashboard } from './contexts/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -19,6 +19,32 @@ import AdminPanel from './pages/AdminPanel';
 import AdminInventoryDashboard from './pages/AdminInventoryDashboard';
 import AdvancedAdminDashboard from './pages/AdvancedAdminDashboard';
 import ApiTest from './pages/ApiTest';
+
+// Mock Auth Wrapper for debugging API
+const MockAuthWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  useEffect(() => {
+    // Create a mock user for API testing
+    const mockUser = {
+      id: '1',
+      name: 'Test User',
+      email: 'test@example.com',
+      role: 'admin',
+      department: 'IT',
+      permissions: [],
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      lastLogin: new Date().toISOString()
+    };
+
+    // Store mock user and token for API access
+    localStorage.setItem('user', JSON.stringify(mockUser));
+    localStorage.setItem('access_token', 'mock_token_for_api_testing');
+
+    console.log('Mock auth setup complete for API testing');
+  }, []);
+
+  return <>{children}</>;
+};
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ 
