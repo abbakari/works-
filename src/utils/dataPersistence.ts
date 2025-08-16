@@ -346,12 +346,16 @@ export class DataPersistenceManager {
 
   // Get data by workflow ID
   static getDataByWorkflowId(workflowId: string): { budgetData: SavedBudgetData[], forecastData: SavedForecastData[] } {
-    const budgetData = this.getSalesBudgetData().filter(item =>
+    const salesData = this.getSalesBudgetData();
+    const forecastDataRaw = this.getRollingForecastData();
+
+    const budgetData = Array.isArray(salesData) ? salesData.filter(item =>
       item.submissionMetadata?.workflowId === workflowId
-    );
-    const forecastData = this.getRollingForecastData().filter(item =>
+    ) : [];
+
+    const forecastData = Array.isArray(forecastDataRaw) ? forecastDataRaw.filter(item =>
       item.submissionMetadata?.workflowId === workflowId
-    );
+    ) : [];
 
     return { budgetData, forecastData };
   }
