@@ -70,10 +70,10 @@ const AppRoutes: React.FC = () => {
   return (
     <Routes>
       {/* Public Routes - Temporarily replaced with Rolling Forecast for debugging */}
-      <Route path="/login" element={<RollingForecast />} />
+      <Route path="/login" element={<MockAuthWrapper><RollingForecast /></MockAuthWrapper>} />
 
       {/* Protected Routes - Temporarily direct to Rolling Forecast for debugging */}
-      <Route path="/" element={<RollingForecast />} />
+      <Route path="/" element={<MockAuthWrapper><RollingForecast /></MockAuthWrapper>} />
       
       <Route 
         path="/dashboard" 
