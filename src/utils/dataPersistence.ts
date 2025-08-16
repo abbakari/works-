@@ -124,7 +124,8 @@ export class DataPersistenceManager {
   static getSalesBudgetData(): SavedBudgetData[] {
     try {
       const data = localStorage.getItem(SALES_BUDGET_STORAGE_KEY);
-      return data ? JSON.parse(data) : [];
+      const parsed = data ? JSON.parse(data) : [];
+      return Array.isArray(parsed) ? parsed : [];
     } catch (error) {
       console.error('Error loading sales budget data:', error);
       return [];
@@ -169,7 +170,8 @@ export class DataPersistenceManager {
   static getRollingForecastData(): SavedForecastData[] {
     try {
       const data = localStorage.getItem(ROLLING_FORECAST_STORAGE_KEY);
-      return data ? JSON.parse(data) : [];
+      const parsed = data ? JSON.parse(data) : [];
+      return Array.isArray(parsed) ? parsed : [];
     } catch (error) {
       console.error('Error loading rolling forecast data:', error);
       return [];
