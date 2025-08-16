@@ -160,20 +160,45 @@ const RollingForecast: React.FC = () => {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [dataError, setDataError] = useState<string | null>(null);
 
-  // Load data from backend
+  // Load data from backend with proper error handling
   const loadForecastData = async () => {
     try {
       setIsLoadingData(true);
       setDataError(null);
 
+      console.log('Attempting to load forecasts from API...');
+
+      // Check if we have an auth token
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        console.log('No auth token found, you may need to authenticate first');
+        // For now, let's try anyway in case the backend allows public access
+      }
+
       const forecasts = await rollingForecastService.getAllForecasts();
-      console.log('Loaded forecasts from backend:', forecasts);
+      console.log('Successfully loaded forecasts from backend:', forecasts.length, 'items');
 
       setTableData(forecasts);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load forecast data:', error);
-      setDataError('Failed to load forecast data from server. Please ensure the backend is running.');
+
+      // Provide specific error messages based on error type
+      let errorMessage = 'Failed to load forecast data from server.';
+
+      if (error.message?.includes('401')) {
+        errorMessage = 'Authentication required. Please ensure you have valid credentials.';
+      } else if (error.message?.includes('404')) {
+        errorMessage = 'Forecast API endpoint not found. Please check backend configuration.';
+      } else if (error.message?.includes('500')) {
+        errorMessage = 'Server error. Please check backend logs.';
+      } else if (error.message?.includes('fetch')) {
+        errorMessage = 'Cannot connect to backend server. Please ensure it is running on localhost:8000.';
+      }
+
+      setDataError(errorMessage);
+
+      // For now, use empty array but we could fall back to local data here
       setTableData([]);
     } finally {
       setIsLoadingData(false);
