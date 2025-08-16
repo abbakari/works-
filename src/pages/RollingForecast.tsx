@@ -160,25 +160,48 @@ const RollingForecast: React.FC = () => {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [dataError, setDataError] = useState<string | null>(null);
 
-  // Load data from backend with proper error handling
+  // Load data from backend using DataPersistenceManager for proper synchronization
   const loadForecastData = async () => {
     try {
       setIsLoadingData(true);
       setDataError(null);
 
-      console.log('Attempting to load forecasts from API...');
+      console.log('Loading Rolling Forecast data via DataPersistenceManager...');
 
       // Check if we have an auth token
       const token = localStorage.getItem('access_token');
       if (!token) {
-        console.log('No auth token found, you may need to authenticate first');
-        // For now, let's try anyway in case the backend allows public access
+        console.warn('No auth token found, authentication may be required');
       }
 
-      const forecasts = await rollingForecastService.getAllForecasts();
+      // Use DataPersistenceManager which handles API calls and synchronization
+      const forecasts = await DataPersistenceManager.getRollingForecastData();
       console.log('Successfully loaded forecasts from backend:', forecasts.length, 'items');
 
-      setTableData(forecasts);
+      // Transform the SavedForecastData to the format expected by the table
+      const transformedData = forecasts.map(forecast => ({
+        id: forecast.id,
+        customer: forecast.customer,
+        item: forecast.item,
+        category: forecast.category || 'N/A',
+        brand: forecast.brand || 'N/A',
+        // Extract budget/actual data from forecast entry
+        bud25: forecast.budgetData?.bud25 || 0,
+        ytd25: forecast.budgetData?.ytd25 || 0,
+        forecast: forecast.forecastTotal || 0,
+        stock: forecast.budgetData?.stock || 0,
+        git: forecast.budgetData?.git || 0,
+        eta: forecast.budgetData?.eta || '',
+        // Include forecast data for monthly breakdown
+        budgetDistribution: forecast.forecastData || {},
+        // Metadata
+        createdBy: forecast.createdBy,
+        createdAt: forecast.createdAt,
+        status: forecast.status
+      }));
+
+      setTableData(transformedData);
+      console.log('Transformed', transformedData.length, 'forecast entries for table display');
 
     } catch (error: any) {
       console.error('Failed to load forecast data:', error);
@@ -186,19 +209,17 @@ const RollingForecast: React.FC = () => {
       // Provide specific error messages based on error type
       let errorMessage = 'Failed to load forecast data from server.';
 
-      if (error.message?.includes('401')) {
+      if (error.message?.includes('Authentication required') || error.message?.includes('401')) {
         errorMessage = 'Authentication required. Please ensure you have valid credentials.';
       } else if (error.message?.includes('404')) {
         errorMessage = 'Forecast API endpoint not found. Please check backend configuration.';
       } else if (error.message?.includes('500')) {
         errorMessage = 'Server error. Please check backend logs.';
-      } else if (error.message?.includes('fetch')) {
-        errorMessage = 'Cannot connect to backend server. Please ensure it is running on localhost:8000.';
+      } else if (error.message?.includes('fetch') || error.message?.includes('connection')) {
+        errorMessage = 'Cannot connect to backend server. Please ensure it is running and accessible.';
       }
 
       setDataError(errorMessage);
-
-      // For now, use empty array but we could fall back to local data here
       setTableData([]);
     } finally {
       setIsLoadingData(false);
