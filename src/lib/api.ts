@@ -1,6 +1,6 @@
-// API Configuration for STM Budget Frontend
+// Supabase API Service for STM Budget Frontend
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+import { supabase } from './supabase';
 
 interface ApiResponse<T> {
   data?: T;
@@ -9,252 +9,353 @@ interface ApiResponse<T> {
 }
 
 class ApiService {
-  private baseURL: string;
-
-  constructor(baseURL: string = API_BASE_URL) {
-    this.baseURL = baseURL;
-  }
-
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<ApiResponse<T>> {
-    const url = `${this.baseURL}${endpoint}`;
-
-    // Get JWT token from localStorage
-    const token = localStorage.getItem('access_token');
-
-    const defaultOptions: RequestInit = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
-      },
-      ...options,
-    };
-
+  // Authentication
+  async login(email: string, password: string) {
     try {
-      const response = await fetch(url, defaultOptions);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        return { error: error.message };
       }
 
-      // Handle empty responses (like 204 No Content)
-      const contentType = response.headers.get('content-type');
-      if (response.status === 204 || !contentType?.includes('application/json')) {
-        return { data: null as T };
-      }
-
-      const data = await response.json();
       return { data };
     } catch (error) {
-      console.error('API request failed:', error);
-      return { 
-        error: error instanceof Error ? error.message : 'Unknown error occurred' 
-      };
+      return { error: error instanceof Error ? error.message : 'Login failed' };
     }
   }
 
-  // Authentication
-  async login(email: string, password: string) {
-    return this.request('/auth/login/', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-  }
-
   async getCurrentUser() {
-    return this.request('/auth/me/');
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      
+      if (error) {
+        return { error: error.message };
+      }
+
+      return { data: user };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to get user' };
+    }
   }
 
   async getUserProfile() {
-    return this.request('/auth/profile/');
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        return { error: 'Not authenticated' };
+      }
+
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return { data };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to get profile' };
+    }
   }
 
   // Budget API
   async getBudgets(params?: Record<string, any>) {
-    const searchParams = params ? `?${new URLSearchParams(params)}` : '';
-    return this.request(`/budgets/${searchParams}`);
+    try {
+      let query = supabase.from('budgets').select('*');
+
+      // Apply filters if params exist
+      if (params) {
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            query = query.eq(key, value);
+          }
+        });
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return { data };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to get budgets' };
+    }
   }
 
   async createBudget(budgetData: any) {
-    return this.request('/budgets/', {
-      method: 'POST',
-      body: JSON.stringify(budgetData),
-    });
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        return { error: 'Not authenticated' };
+      }
+
+      const { data, error } = await supabase
+        .from('budgets')
+        .insert([{ ...budgetData, user_id: user.id }])
+        .select()
+        .single();
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return { data };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to create budget' };
+    }
   }
 
-  async updateBudget(id: number, budgetData: any) {
-    return this.request(`/budgets/${id}/`, {
-      method: 'PUT',
-      body: JSON.stringify(budgetData),
-    });
+  async updateBudget(id: string, budgetData: any) {
+    try {
+      const { data, error } = await supabase
+        .from('budgets')
+        .update(budgetData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return { data };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to update budget' };
+    }
   }
 
-  async getBudgetById(id: number) {
-    return this.request(`/budgets/${id}/`);
+  async getBudgetById(id: string) {
+    try {
+      const { data, error } = await supabase
+        .from('budgets')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return { data };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to get budget' };
+    }
   }
 
-  async deleteBudget(id: number) {
-    return this.request(`/budgets/${id}/`, {
-      method: 'DELETE',
-    });
+  async deleteBudget(id: string) {
+    try {
+      const { error } = await supabase
+        .from('budgets')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return { data: null };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to delete budget' };
+    }
   }
 
-  // Forecast API
-  async getForecasts(params?: Record<string, any>) {
-    const searchParams = params ? `?${new URLSearchParams(params)}` : '';
-    return this.request(`/forecasts/${searchParams}`);
+  // Inventory API
+  async getInventoryItems(params?: Record<string, any>) {
+    try {
+      let query = supabase.from('inventory_items').select('*');
+
+      // Apply filters if params exist
+      if (params) {
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            query = query.eq(key, value);
+          }
+        });
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return { data };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to get inventory items' };
+    }
   }
 
-  async createForecast(forecastData: any) {
-    return this.request('/forecasts/', {
-      method: 'POST',
-      body: JSON.stringify(forecastData),
-    });
+  async createInventoryItem(itemData: any) {
+    try {
+      const { data, error } = await supabase
+        .from('inventory_items')
+        .insert([itemData])
+        .select()
+        .single();
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return { data };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to create inventory item' };
+    }
   }
 
-  async updateForecast(id: number, forecastData: any) {
-    return this.request(`/forecasts/${id}/`, {
-      method: 'PUT',
-      body: JSON.stringify(forecastData),
-    });
+  async updateInventoryItem(id: string, itemData: any) {
+    try {
+      const { data, error } = await supabase
+        .from('inventory_items')
+        .update(itemData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return { data };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to update inventory item' };
+    }
   }
 
-  async getForecastById(id: number) {
-    return this.request(`/forecasts/${id}/`);
-  }
+  async deleteInventoryItem(id: string) {
+    try {
+      const { error } = await supabase
+        .from('inventory_items')
+        .delete()
+        .eq('id', id);
 
-  // Workflow API
-  async getWorkflowItems() {
-    return this.request('/workflow/items/');
-  }
+      if (error) {
+        return { error: error.message };
+      }
 
-  async getWorkflowItemById(id: string) {
-    return this.request(`/workflow/items/${id}/`);
-  }
-
-  async createWorkflowItem(workflowData: any) {
-    return this.request('/workflow/items/', {
-      method: 'POST',
-      body: JSON.stringify(workflowData),
-    });
-  }
-
-  async updateWorkflowItem(id: string, workflowData: any) {
-    return this.request(`/workflow/items/${id}/`, {
-      method: 'PATCH',
-      body: JSON.stringify(workflowData),
-    });
-  }
-
-  async getWorkflowNotifications() {
-    return this.request('/workflow/notifications/');
-  }
-
-  async getWorkflowNotificationById(id: string) {
-    return this.request(`/workflow/notifications/${id}/`);
-  }
-
-  async createWorkflowNotification(notificationData: any) {
-    return this.request('/workflow/notifications/', {
-      method: 'POST',
-      body: JSON.stringify(notificationData),
-    });
-  }
-
-  async updateWorkflowNotification(id: string, notificationData: any) {
-    return this.request(`/workflow/notifications/${id}/`, {
-      method: 'PATCH',
-      body: JSON.stringify(notificationData),
-    });
-  }
-
-  async getWorkflowComments() {
-    return this.request('/workflow/comments/');
-  }
-
-  async getWorkflowCommentById(id: string) {
-    return this.request(`/workflow/comments/${id}/`);
-  }
-
-  async createWorkflowComment(commentData: any) {
-    return this.request('/workflow/comments/', {
-      method: 'POST',
-      body: JSON.stringify(commentData),
-    });
-  }
-
-  async updateWorkflowComment(id: string, commentData: any) {
-    return this.request(`/workflow/comments/${id}/`, {
-      method: 'PATCH',
-      body: JSON.stringify(commentData),
-    });
+      return { data: null };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to delete inventory item' };
+    }
   }
 
   // Users API
   async getUsers() {
-    return this.request('/users/');
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*');
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return { data };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to get users' };
+    }
   }
 
   async createUser(userData: any) {
-    return this.request('/users/', {
-      method: 'POST',
-      body: JSON.stringify(userData),
-    });
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .insert([userData])
+        .select()
+        .single();
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return { data };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to create user' };
+    }
   }
 
   async updateUser(id: string, userData: any) {
-    return this.request(`/users/${id}/`, {
-      method: 'PUT',
-      body: JSON.stringify(userData),
-    });
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .update(userData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return { data };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to update user' };
+    }
   }
 
   async deleteUser(id: string) {
-    return this.request(`/users/${id}/`, {
-      method: 'DELETE',
-    });
-  }
-
-  // Messages API
-  async getMessages() {
-    return this.request('/notifications/messages/');
-  }
-
-  async sendMessage(messageData: any) {
-    return this.request('/notifications/messages/', {
-      method: 'POST',
-      body: JSON.stringify(messageData),
-    });
-  }
-
-  // Health check (note: health endpoint is at root level, not under /api/)
-  async healthCheck() {
-    const url = `${this.baseURL.replace('/api', '')}/health/`;
-    const defaultOptions: RequestInit = {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    };
-
     try {
-      const response = await fetch(url, defaultOptions);
+      const { error } = await supabase
+        .from('users')
+        .delete()
+        .eq('id', id);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (error) {
+        return { error: error.message };
       }
 
-      const data = await response.json();
-      return { data };
+      return { data: null };
     } catch (error) {
-      console.error('Health check failed:', error);
-      return {
-        error: error instanceof Error ? error.message : 'Health check failed'
-      };
+      return { error: error instanceof Error ? error.message : 'Failed to delete user' };
     }
   }
+
+  // Generic health check - returns Supabase connection status
+  async healthCheck() {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('count', { count: 'exact', head: true });
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return { data: { status: 'healthy', connection: 'supabase' } };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Health check failed' };
+    }
+  }
+
+  // Legacy method signatures for compatibility (will throw errors suggesting migration)
+  async getForecasts() { throw new Error('Forecasts not implemented in Supabase yet'); }
+  async createForecast() { throw new Error('Forecasts not implemented in Supabase yet'); }
+  async updateForecast() { throw new Error('Forecasts not implemented in Supabase yet'); }
+  async getForecastById() { throw new Error('Forecasts not implemented in Supabase yet'); }
+  async getWorkflowItems() { throw new Error('Workflow not implemented in Supabase yet'); }
+  async getWorkflowItemById() { throw new Error('Workflow not implemented in Supabase yet'); }
+  async createWorkflowItem() { throw new Error('Workflow not implemented in Supabase yet'); }
+  async updateWorkflowItem() { throw new Error('Workflow not implemented in Supabase yet'); }
+  async getWorkflowNotifications() { throw new Error('Workflow not implemented in Supabase yet'); }
+  async getWorkflowNotificationById() { throw new Error('Workflow not implemented in Supabase yet'); }
+  async createWorkflowNotification() { throw new Error('Workflow not implemented in Supabase yet'); }
+  async updateWorkflowNotification() { throw new Error('Workflow not implemented in Supabase yet'); }
+  async getWorkflowComments() { throw new Error('Workflow not implemented in Supabase yet'); }
+  async getWorkflowCommentById() { throw new Error('Workflow not implemented in Supabase yet'); }
+  async createWorkflowComment() { throw new Error('Workflow not implemented in Supabase yet'); }
+  async updateWorkflowComment() { throw new Error('Workflow not implemented in Supabase yet'); }
+  async getMessages() { throw new Error('Messages not implemented in Supabase yet'); }
+  async sendMessage() { throw new Error('Messages not implemented in Supabase yet'); }
 }
 
 // Export singleton instance
