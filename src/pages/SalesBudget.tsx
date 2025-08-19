@@ -450,7 +450,7 @@ const SalesBudget: React.FC = () => {
     const updateGitDataInTable = () => {
       setOriginalTableData(prevData =>
         prevData.map(row => {
-          const gitSummary = DataPersistenceManager.getGitSummaryForItem(row.customer, row.item);
+          const gitSummary = DataManager.getGitSummaryForItem(row.customer, row.item);
           return {
             ...row,
             git: gitSummary.gitQuantity,
@@ -479,7 +479,7 @@ const SalesBudget: React.FC = () => {
   // Load saved salesman data for current user
   useEffect(() => {
     if (user) {
-      const savedBudgetData = DataPersistenceManager.getSalesBudgetDataByUser(user.name);
+      const savedBudgetData = DataManager.getSalesBudgetDataByUser(user.name);
       if (savedBudgetData.length > 0) {
         console.log('Loading saved budget data for', user.name, ':', savedBudgetData.length, 'items');
 
@@ -713,7 +713,7 @@ const SalesBudget: React.FC = () => {
             status: 'saved'
           };
 
-          DataPersistenceManager.saveSalesBudgetData([savedData]);
+          DataManager.saveSalesBudgetData([savedData]);
         }
 
         showNotification(`✅ Monthly budget data saved to database. Net value: $${netBudgetValue.toLocaleString()} (after $${finalDiscount.toLocaleString()} automatic discount applied).`, 'success');
@@ -1146,7 +1146,7 @@ const SalesBudget: React.FC = () => {
         status: 'saved'
       };
 
-      DataPersistenceManager.saveSalesBudgetData([savedData]);
+      DataManager.saveSalesBudgetData([savedData]);
       console.log('Yearly budget data saved for manager visibility:', savedData);
     }
 
@@ -1214,11 +1214,11 @@ const SalesBudget: React.FC = () => {
       const workflowId = submitForApproval(allBudgets);
 
       // Create submission copies while preserving original data
-      DataPersistenceManager.saveSubmissionCopies(savedBudgetData, [], workflowId);
+      DataManager.saveSubmissionCopies(savedBudgetData, [], workflowId);
 
       // Update status of original saved data to track submission without removing them
       savedBudgetData.forEach(item => {
-        DataPersistenceManager.updateSalesBudgetStatus(item.id, 'submitted');
+        DataManager.updateSalesBudgetStatus(item.id, 'submitted');
       });
 
       showNotification(
@@ -1822,8 +1822,8 @@ const SalesBudget: React.FC = () => {
             {user && (
               <DataPreservationIndicator
                 itemsCount={tableData.length}
-                submittedCount={DataPersistenceManager.getSubmittedSalesBudgetData().filter(item => item.createdBy === user.name).length}
-                preservedCount={DataPersistenceManager.getOriginalSalesBudgetData().filter(item => item.createdBy === user.name).length}
+                submittedCount={DataManager.getSubmittedSalesBudgetData().filter(item => item.createdBy === user.name).length}
+                preservedCount={DataManager.getOriginalSalesBudgetData().filter(item => item.createdBy === user.name).length}
                 dataType="budget"
                 compact={true}
               />
@@ -2146,7 +2146,7 @@ const SalesBudget: React.FC = () => {
                               <GitDetailsTooltip customer={row.customer} item={row.item}>
                                 <div className="flex flex-col items-center gap-1">
                                   {(() => {
-                                    const gitSummary = DataPersistenceManager.getGitSummaryForItem(row.customer, row.item);
+                                    const gitSummary = DataManager.getGitSummaryForItem(row.customer, row.item);
                                     const hasGitData = gitSummary.gitQuantity > 0;
 
                                     return (
