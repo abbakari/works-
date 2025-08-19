@@ -157,3 +157,42 @@ export const budgetDataIntegration = {
     };
   }
 };
+
+// Additional helper functions to replace utils imports
+export const initializeSampleGitData = () => {
+  console.log('Sample GIT data initialization - using real Supabase data instead');
+  return true;
+};
+
+export const getCommunicationStats = () => ({
+  totalMessages: 0,
+  unreadMessages: 0,
+  pendingMessages: 0,
+  byCategory: {},
+  byPriority: {},
+});
+
+// Saved data interfaces for compatibility
+export interface SavedBudgetData {
+  id: string;
+  data: any;
+  createdAt: string;
+}
+
+export interface SavedForecastData {
+  id: string;
+  data: any;
+  createdAt: string;
+}
+
+// Additional year utility functions
+export const generateAvailableYears = () => {
+  const currentYear = getCurrentYear();
+  return Array.from({ length: 5 }, (_, i) => currentYear + i);
+};
+
+export const getDefaultYearSelection = () => getCurrentYear();
+export const getYearValue = (year: number) => year;
+export const setYearValue = (year: number) => year;
+export const createSampleYearlyData = () => ({ year: getCurrentYear(), data: [] });
+export const transformLegacyToYearly = (data: any) => data;
