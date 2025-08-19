@@ -500,6 +500,25 @@ const Login: React.FC = () => {
                       {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
                     </Button>
 
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      onClick={handleCreateDemoUser}
+                      disabled={isLoading || authLoading}
+                      sx={{
+                        mt: 1,
+                        mb: 2,
+                        borderColor: 'primary.main',
+                        color: 'primary.main',
+                        '&:hover': {
+                          borderColor: 'primary.dark',
+                          backgroundColor: 'rgba(255, 215, 0, 0.1)',
+                        },
+                      }}
+                    >
+                      Create/Load Demo User
+                    </Button>
+
                     {(isLoading || authLoading) && (
                       <Button
                         fullWidth
