@@ -495,27 +495,43 @@ const Login: React.FC = () => {
                 </Slide>
 
                 <Box sx={{ mt: 3 }}>
-                  <Paper 
+                  <Paper
                     elevation={0}
-                    sx={{ 
-                      p: 2, 
+                    sx={{
+                      p: 2,
                       backgroundColor: 'rgba(255, 215, 0, 0.1)',
                       borderRadius: 2,
                       border: '1px solid rgba(255, 215, 0, 0.3)'
                     }}
                   >
                     <Typography variant="body2" color="primary.dark" sx={{ fontWeight: 600, mb: 1 }}>
-                      Getting Started
+                      {isSignUp ? 'Create Your Account' : 'Need an Account?'}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      • Create an account using Supabase Auth
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      • Each role has different access levels
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      • Contact admin for role assignments
-                    </Typography>
+                    {isSignUp ? (
+                      <>
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          • Enter your email, password, and full name
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          • Your account will be created automatically
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          • Default role is 'admin' with full access
+                        </Typography>
+                      </>
+                    ) : (
+                      <>
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          • Click "Don't have an account? Sign Up" above
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          • Or use existing Supabase credentials
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          • Each role has different access levels
+                        </Typography>
+                      </>
+                    )}
                   </Paper>
                 </Box>
               </CardContent>
