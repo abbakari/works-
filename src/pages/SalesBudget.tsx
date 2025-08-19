@@ -36,7 +36,7 @@ import DataPreservationIndicator from '../components/DataPreservationIndicator';
 import SetDistributionModal from '../components/SetDistributionModal';
 import AdminStockManagement from '../components/AdminStockManagement';
 import StockSummaryWidget from '../components/StockSummaryWidget';
-import SeasonalDistributionInfo from '../components/SeasonalDistributionInfo';
+import { SeasonalDistributionInfo } from '../components/ComponentStubs';
 import { DataManager, applySeasonalDistribution, convertToMonthlyBudget, SEASONAL_PATTERNS, getCurrentYear } from '../lib/helpers';
 
 // Helper functions for year management
