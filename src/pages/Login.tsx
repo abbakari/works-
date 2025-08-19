@@ -1,7 +1,194 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
+import {
+  Box,
+  Card,
+  CardContent,
+  TextField,
+  Button,
+  Typography,
+  Alert,
+  IconButton,
+  InputAdornment,
+  Paper,
+  Container,
+  Fade,
+  Slide,
+  CircularProgress,
+  createTheme,
+  ThemeProvider,
+  CssBaseline,
+  useMediaQuery
+} from '@mui/material';
+import {
+  Visibility,
+  VisibilityOff,
+  Email,
+  Lock,
+  AccountCircle
+} from '@mui/icons-material';
+import { keyframes, styled } from '@mui/material/styles';
+
+// Create yellow theme
+const yellowTheme = createTheme({
+  palette: {
+    primary: {
+      main: '#FFD700', // Gold/Yellow
+      dark: '#FFA000',
+      light: '#FFECB3',
+    },
+    secondary: {
+      main: '#FF6F00', // Orange accent
+    },
+    background: {
+      default: 'linear-gradient(135deg, #FFD700 0%, #FFA000 50%, #FF8F00 100%)',
+      paper: 'rgba(255, 255, 255, 0.95)',
+    },
+    text: {
+      primary: '#333333',
+      secondary: '#666666',
+    },
+  },
+  components: {
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          '& .MuiOutlinedInput-root': {
+            '&:hover fieldset': {
+              borderColor: '#FFD700',
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: '#FFD700',
+            },
+          },
+        },
+      },
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 25,
+          textTransform: 'none',
+          fontSize: '1.1rem',
+          fontWeight: 600,
+        },
+      },
+    },
+  },
+});
+
+// Floating animation keyframes
+const floatAnimation = keyframes`
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-20px) rotate(2deg);
+  }
+  66% {
+    transform: translateY(-10px) rotate(-1deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+`;
+
+// Sliding animation keyframes
+const slideAnimation = keyframes`
+  0% {
+    transform: translateX(-100vw);
+  }
+  50% {
+    transform: translateX(50vw);
+  }
+  100% {
+    transform: translateX(-100vw);
+  }
+`;
+
+// Styled components
+const YellowBackground = styled(Box)(({ theme }) => ({
+  minHeight: '100vh',
+  background: 'linear-gradient(135deg, #FFD700 0%, #FFA000 30%, #FF8F00 70%, #FFB300 100%)',
+  position: 'relative',
+  overflow: 'hidden',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.3) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.2) 0%, transparent 50%)',
+    pointerEvents: 'none',
+  },
+}));
+
+const SuperdollText = styled(Typography)(({ theme }) => ({
+  position: 'absolute',
+  top: '20%',
+  left: '10%',
+  fontSize: '4rem',
+  fontWeight: 900,
+  color: '#FFD700',
+  textShadow: '3px 3px 6px rgba(0,0,0,0.3), 0 0 20px rgba(255,215,0,0.5)',
+  animation: `${floatAnimation} 6s ease-in-out infinite`,
+  zIndex: 1,
+  fontFamily: 'Arial, sans-serif',
+  background: 'linear-gradient(45deg, #FFD700, #FFA000, #FFD700)',
+  backgroundClip: 'text',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  [theme.breakpoints.down('md')]: {
+    fontSize: '2.5rem',
+    top: '10%',
+  },
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '2rem',
+    position: 'relative',
+    top: 'auto',
+    left: 'auto',
+    textAlign: 'center',
+    marginBottom: theme.spacing(2),
+  },
+}));
+
+const MovingSuperdoll = styled(Typography)(({ theme }) => ({
+  position: 'absolute',
+  bottom: '30%',
+  fontSize: '2rem',
+  fontWeight: 700,
+  color: '#FFD700',
+  textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+  animation: `${slideAnimation} 15s linear infinite`,
+  zIndex: 1,
+  whiteSpace: 'nowrap',
+  [theme.breakpoints.down('sm')]: {
+    display: 'none',
+  },
+}));
+
+const GlassCard = styled(Card)(({ theme }) => ({
+  background: 'rgba(255, 255, 255, 0.95)',
+  backdropFilter: 'blur(10px)',
+  borderRadius: 20,
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+  border: '1px solid rgba(255, 255, 255, 0.2)',
+  position: 'relative',
+  zIndex: 2,
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 160, 0, 0.05))',
+    borderRadius: 20,
+    pointerEvents: 'none',
+  },
+}));
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -10,8 +197,9 @@ const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { login, error, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useMediaQuery(yellowTheme.breakpoints.down('sm'));
 
-  // Reset loading states on mount to prevent stuck states
+  // Reset loading states on mount
   useEffect(() => {
     setIsLoading(false);
   }, []);
@@ -24,7 +212,7 @@ const Login: React.FC = () => {
     const timeoutId = setTimeout(() => {
       setIsLoading(false);
       console.warn('Login timeout - resetting loading state');
-    }, 10000); // 10 second timeout
+    }, 10000);
 
     try {
       await login(email, password);
@@ -33,12 +221,10 @@ const Login: React.FC = () => {
     } catch (err) {
       clearTimeout(timeoutId);
       console.error('Login error:', err);
-      // Error is handled by the auth context
     } finally {
       setIsLoading(false);
     }
   };
-
 
   // Reset loading state if there's an error
   useEffect(() => {
@@ -48,135 +234,285 @@ const Login: React.FC = () => {
   }, [error]);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900">STMBudget</h1>
-          <h2 className="mt-6 text-2xl font-bold text-gray-900">Sign in to your account</h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Access your role-specific dashboard and tools
-          </p>
-        </div>
-      </div>
+    <ThemeProvider theme={yellowTheme}>
+      <CssBaseline />
+      <YellowBackground>
+        {/* Moving Superdoll Text */}
+        <MovingSuperdoll variant="h2">
+          ✨ superdoll ✨
+        </MovingSuperdoll>
+        
+        {/* Floating Superdoll Text */}
+        <SuperdollText variant="h1">
+          superdoll
+        </SuperdollText>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
-              <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Enter your email"
-                />
-              </div>
-            </div>
+        <Container 
+          maxWidth="sm" 
+          sx={{ 
+            minHeight: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            py: 4,
+            position: 'relative',
+            zIndex: 2,
+          }}
+        >
+          <Fade in={true} timeout={1000}>
+            <GlassCard elevation={0} sx={{ width: '100%', maxWidth: 400 }}>
+              <CardContent sx={{ p: 4 }}>
+                <Box sx={{ textAlign: 'center', mb: 4 }}>
+                  <Slide direction="down" in={true} timeout={800}>
+                    <Box>
+                      <AccountCircle 
+                        sx={{ 
+                          fontSize: 80, 
+                          color: 'primary.main',
+                          mb: 2,
+                          filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))'
+                        }} 
+                      />
+                      <Typography 
+                        variant="h4" 
+                        component="h1" 
+                        gutterBottom
+                        sx={{ 
+                          fontWeight: 700,
+                          background: 'linear-gradient(45deg, #FFD700, #FF8F00)',
+                          backgroundClip: 'text',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                        }}
+                      >
+                        STMBudget
+                      </Typography>
+                      <Typography variant="h6" color="text.secondary" gutterBottom>
+                        Welcome Back!
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Sign in to access your dashboard
+                      </Typography>
+                    </Box>
+                  </Slide>
+                </Box>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Enter your password"
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-gray-400" />
-                  )}
-                </button>
-              </div>
-            </div>
+                <Slide direction="up" in={true} timeout={1000}>
+                  <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+                    <TextField
+                      fullWidth
+                      label="Email Address"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      margin="normal"
+                      variant="outlined"
+                      sx={{ mb: 2 }}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Email color="primary" />
+                          </InputAdornment>
+                        ),
+                        sx: {
+                          borderRadius: 2,
+                          '& .MuiOutlinedInput-notchedOutline': {
+                            borderWidth: 2,
+                          },
+                        }
+                      }}
+                    />
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-md p-4">
-                <div className="flex">
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-red-800">Authentication Error</h3>
-                    <div className="mt-2 text-sm text-red-700">
-                      {error}
-                      {error.includes('HTTP error') && (
-                        <div className="mt-1">
-                          <p>• Make sure the Django backend is running</p>
-                          <p>• Check if you have created a superuser account</p>
-                        </div>
+                    <TextField
+                      fullWidth
+                      label="Password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      margin="normal"
+                      variant="outlined"
+                      sx={{ mb: 3 }}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Lock color="primary" />
+                          </InputAdornment>
+                        ),
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              edge="end"
+                              onClick={() => setShowPassword(!showPassword)}
+                              sx={{ color: 'primary.main' }}
+                            >
+                              {showPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                        sx: {
+                          borderRadius: 2,
+                          '& .MuiOutlinedInput-notchedOutline': {
+                            borderWidth: 2,
+                          },
+                        }
+                      }}
+                    />
+
+                    {error && (
+                      <Fade in={true}>
+                        <Alert 
+                          severity="error" 
+                          sx={{ 
+                            mb: 2,
+                            borderRadius: 2,
+                            '& .MuiAlert-message': {
+                              fontSize: '0.9rem'
+                            }
+                          }}
+                        >
+                          <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                            Authentication Error
+                          </Typography>
+                          {error}
+                          {error.includes('HTTP error') && (
+                            <Box sx={{ mt: 1, fontSize: '0.8rem' }}>
+                              <Typography variant="caption" display="block">
+                                • Make sure you have created a Supabase account
+                              </Typography>
+                              <Typography variant="caption" display="block">
+                                • Check your email and password
+                              </Typography>
+                            </Box>
+                          )}
+                        </Alert>
+                      </Fade>
+                    )}
+
+                    <Button
+                      type="submit"
+                      fullWidth
+                      variant="contained"
+                      disabled={isLoading || authLoading}
+                      sx={{
+                        py: 1.5,
+                        mb: 2,
+                        fontSize: '1.1rem',
+                        fontWeight: 600,
+                        background: 'linear-gradient(45deg, #FFD700, #FF8F00)',
+                        '&:hover': {
+                          background: 'linear-gradient(45deg, #FFA000, #FF6F00)',
+                          transform: 'translateY(-2px)',
+                          boxShadow: '0 6px 20px rgba(255, 215, 0, 0.4)',
+                        },
+                        '&:disabled': {
+                          background: 'rgba(255, 215, 0, 0.5)',
+                        },
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      {isLoading || authLoading ? (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <CircularProgress size={20} color="inherit" />
+                          Signing in...
+                        </Box>
+                      ) : (
+                        'Sign In'
                       )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+                    </Button>
 
-            <div className="space-y-3">
-              <button
-                type="submit"
-                disabled={isLoading || authLoading}
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading || authLoading ? 'Signing in...' : 'Sign in'}
-              </button>
+                    {(isLoading || authLoading) && (
+                      <Button
+                        fullWidth
+                        variant="text"
+                        onClick={() => {
+                          setIsLoading(false);
+                          console.log('Login state reset manually');
+                        }}
+                        sx={{ 
+                          color: 'text.secondary',
+                          fontSize: '0.8rem',
+                          textTransform: 'none',
+                        }}
+                      >
+                        Reset if stuck
+                      </Button>
+                    )}
+                  </Box>
+                </Slide>
 
-              {(isLoading || authLoading) && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsLoading(false);
-                    console.log('Login state reset manually');
-                  }}
-                  className="w-full text-xs text-gray-500 hover:text-gray-700 underline"
-                >
-                  Reset if stuck
-                </button>
-              )}
-            </div>
-          </form>
+                <Box sx={{ mt: 3 }}>
+                  <Paper 
+                    elevation={0}
+                    sx={{ 
+                      p: 2, 
+                      backgroundColor: 'rgba(255, 215, 0, 0.1)',
+                      borderRadius: 2,
+                      border: '1px solid rgba(255, 215, 0, 0.3)'
+                    }}
+                  >
+                    <Typography variant="body2" color="primary.dark" sx={{ fontWeight: 600, mb: 1 }}>
+                      Getting Started
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      • Create an account using Supabase Auth
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      • Each role has different access levels
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      • Contact admin for role assignments
+                    </Typography>
+                  </Paper>
+                </Box>
+              </CardContent>
+            </GlassCard>
+          </Fade>
+        </Container>
 
-          <div className="mt-6">
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-              <div className="flex">
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-blue-800">Getting Started</h3>
-                  <div className="mt-2 text-sm text-blue-700">
-                    <p>• Use the superuser credentials created via Django admin</p>
-                    <p>• Create additional users through the admin interface</p>
-                    <p>• Each role has different access and features</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+        {/* Additional floating elements */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '10%',
+            right: '10%',
+            fontSize: '1.5rem',
+            animation: `${floatAnimation} 8s ease-in-out infinite`,
+            animationDelay: '2s',
+            zIndex: 1,
+          }}
+        >
+          ⭐
+        </Box>
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: '10%',
+            left: '5%',
+            fontSize: '2rem',
+            animation: `${floatAnimation} 10s ease-in-out infinite`,
+            animationDelay: '4s',
+            zIndex: 1,
+          }}
+        >
+          ✨
+        </Box>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '60%',
+            right: '20%',
+            fontSize: '1.2rem',
+            animation: `${floatAnimation} 7s ease-in-out infinite`,
+            animationDelay: '1s',
+            zIndex: 1,
+          }}
+        >
+          💫
+        </Box>
+      </YellowBackground>
+    </ThemeProvider>
   );
 };
 
