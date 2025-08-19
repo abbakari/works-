@@ -455,8 +455,23 @@ const Login: React.FC = () => {
                           Signing in...
                         </Box>
                       ) : (
-                        'Sign In'
+                        isSignUp ? 'Create Account' : 'Sign In'
                       )}
+                    </Button>
+
+                    <Button
+                      fullWidth
+                      variant="text"
+                      onClick={() => setIsSignUp(!isSignUp)}
+                      sx={{
+                        color: 'primary.main',
+                        fontSize: '0.9rem',
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        mb: 1,
+                      }}
+                    >
+                      {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
                     </Button>
 
                     {(isLoading || authLoading) && (
@@ -465,9 +480,9 @@ const Login: React.FC = () => {
                         variant="text"
                         onClick={() => {
                           setIsLoading(false);
-                          console.log('Login state reset manually');
+                          console.log('Auth state reset manually');
                         }}
-                        sx={{ 
+                        sx={{
                           color: 'text.secondary',
                           fontSize: '0.8rem',
                           textTransform: 'none',
@@ -546,7 +561,7 @@ const Login: React.FC = () => {
             zIndex: 1,
           }}
         >
-          ����
+          💫
         </Box>
       </YellowBackground>
     </ThemeProvider>
