@@ -22,8 +22,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import { DataConnection, DataSourceType } from '../types/dataSource';
-import { dataConnector } from '../utils/dataConnector';
-import { budgetDataIntegration } from '../utils/budgetDataIntegration';
+import { dataConnector, budgetDataIntegration } from '../lib/helpers';
 import DataSourceModal from '../components/DataSourceModal';
 import SchemaExplorer from '../components/SchemaExplorer';
 
