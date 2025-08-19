@@ -202,6 +202,31 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const isMobile = useMediaQuery(yellowTheme.breakpoints.down('sm'));
 
+  const handleCreateDemoUser = async () => {
+    setIsLoading(true);
+    try {
+      const demoUser = await createDemoUser();
+      // Auto-fill the form with demo credentials
+      setEmail(demoUser.email);
+      setPassword(demoUser.password);
+      setFullName(demoUser.name);
+
+      // Show success message
+      alert('Demo user created successfully! You can now sign in with the auto-filled credentials.');
+    } catch (error: any) {
+      console.error('Failed to create demo user:', error);
+      // If user already exists, just fill the form
+      const demoCredentials = getDemoCredentials();
+      setEmail(demoCredentials.email);
+      setPassword(demoCredentials.password);
+      setFullName(demoCredentials.name);
+
+      alert('Demo credentials loaded! You can now sign in.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Reset loading states on mount
   useEffect(() => {
     setIsLoading(false);
