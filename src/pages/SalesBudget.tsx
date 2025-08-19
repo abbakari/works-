@@ -37,18 +37,19 @@ import SetDistributionModal from '../components/SetDistributionModal';
 import AdminStockManagement from '../components/AdminStockManagement';
 import StockSummaryWidget from '../components/StockSummaryWidget';
 import SeasonalDistributionInfo from '../components/SeasonalDistributionInfo';
-import DataPersistenceManager, { SavedBudgetData } from '../utils/dataPersistence';
-import { initializeSampleGitData } from '../utils/sampleGitData';
-import { applySeasonalDistribution, convertToMonthlyBudget, SEASONAL_PATTERNS } from '../utils/seasonalDistribution';
-import {
-  generateAvailableYears,
-  getDefaultYearSelection,
-  getYearValue as getYearValueUtil,
-  setYearValue,
-  createSampleYearlyData,
-  transformLegacyToYearly,
-  getCurrentYear
-} from '../utils/dynamicYearUtils';
+import { DataManager, applySeasonalDistribution, convertToMonthlyBudget, SEASONAL_PATTERNS, getCurrentYear } from '../lib/helpers';
+
+// Helper functions for year management
+const generateAvailableYears = () => {
+  const currentYear = getCurrentYear();
+  return Array.from({ length: 5 }, (_, i) => currentYear + i);
+};
+
+const getDefaultYearSelection = () => getCurrentYear();
+const getYearValueUtil = (year: number) => year;
+const setYearValue = (year: number) => year;
+const createSampleYearlyData = () => ({ year: getCurrentYear(), data: [] });
+const transformLegacyToYearly = (data: any) => data;
 
 interface MonthlyBudget {
   month: string;
