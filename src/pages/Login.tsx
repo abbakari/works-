@@ -298,10 +298,10 @@ const Login: React.FC = () => {
                         STMBudget
                       </Typography>
                       <Typography variant="h6" color="text.secondary" gutterBottom>
-                        Welcome Back!
+                        {isSignUp ? 'Create Account' : 'Welcome Back!'}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Sign in to access your dashboard
+                        {isSignUp ? 'Sign up to get started' : 'Sign in to access your dashboard'}
                       </Typography>
                     </Box>
                   </Slide>
