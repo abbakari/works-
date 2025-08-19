@@ -542,8 +542,16 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Communication Demo Info - Show for all users */}
-        <CommunicationDemoInfo />
+        {/* Real Communication Center - Available for all users */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center space-x-3">
+            <MessageSquare className="w-5 h-5 text-blue-600" />
+            <div>
+              <h3 className="font-semibold text-blue-900">Communication Center</h3>
+              <p className="text-sm text-blue-700">Connected to real Supabase data - no demo mode</p>
+            </div>
+          </div>
+        </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
