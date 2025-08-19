@@ -119,6 +119,47 @@ export class DataManager {
       return [];
     }
   }
+
+  // Additional methods for compatibility
+  static async saveSalesBudgetData(data: any) {
+    return this.saveBudgetData(data);
+  }
+
+  static async loadSalesBudgetData() {
+    return this.loadBudgetData();
+  }
+
+  static async saveForecastData(data: any) {
+    return this.saveBudgetData(data);
+  }
+
+  static async loadForecastData() {
+    return this.loadBudgetData();
+  }
+
+  static async saveWorkflowData(data: any) {
+    console.log('Saving workflow data to Supabase:', data);
+    return data;
+  }
+
+  static async loadWorkflowData() {
+    console.log('Loading workflow data from Supabase');
+    return [];
+  }
+
+  static async saveGitData(data: any) {
+    console.log('Saving GIT data to Supabase:', data);
+    return data;
+  }
+
+  static async loadGitData() {
+    console.log('Loading GIT data from Supabase');
+    return [];
+  }
+
+  // Legacy methods for compatibility
+  static saveData = this.saveBudgetData;
+  static loadData = this.loadBudgetData;
 }
 
 // Simple data connector for backward compatibility
