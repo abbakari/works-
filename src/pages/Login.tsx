@@ -309,6 +309,33 @@ const Login: React.FC = () => {
 
                 <Slide direction="up" in={true} timeout={1000}>
                   <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+                    {isSignUp && (
+                      <TextField
+                        fullWidth
+                        label="Full Name"
+                        type="text"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        required={isSignUp}
+                        margin="normal"
+                        variant="outlined"
+                        sx={{ mb: 2 }}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <AccountCircle color="primary" />
+                            </InputAdornment>
+                          ),
+                          sx: {
+                            borderRadius: 2,
+                            '& .MuiOutlinedInput-notchedOutline': {
+                              borderWidth: 2,
+                            },
+                          }
+                        }}
+                      />
+                    )}
+
                     <TextField
                       fullWidth
                       label="Email Address"
@@ -519,7 +546,7 @@ const Login: React.FC = () => {
             zIndex: 1,
           }}
         >
-          💫
+          ����
         </Box>
       </YellowBackground>
     </ThemeProvider>
