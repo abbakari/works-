@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, UserRole, AuthContextType, ROLE_PERMISSIONS, ROLE_DASHBOARDS } from '../types/auth';
-import { apiService } from '../lib/api';
+import { supabase } from '../lib/supabase';
+import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -21,6 +22,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Convert Supabase user to our User type
+  const convertSupabaseUser = async (supabaseUser: SupabaseUser): Promise<User> => {
+    // Try to get additional user data from our users table
+    const { data: userData } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', supabaseUser.id)
+      .single();
+
+    return {
+      id: supabaseUser.id,
+      name: userData?.full_name || supabaseUser.user_metadata?.full_name || supabaseUser.email?.split('@')[0] || 'User',
+      email: supabaseUser.email || '',
+      role: (userData?.role || 'admin') as UserRole,
+      department: userData?.department || 'Unknown',
+      permissions: ROLE_PERMISSIONS[(userData?.role || 'admin') as UserRole] || [],
+      isActive: true,
+      createdAt: supabaseUser.created_at,
+      lastLogin: new Date().toISOString()
+    };
+  };
 
   // Check for existing session on mount
   useEffect(() => {
@@ -28,43 +50,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const getSession = async () => {
       try {
-        // Optional health check with timeout - less aggressive error handling
-        try {
-          const healthCheck = await Promise.race([
-            apiService.healthCheck(),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1000))
-          ]);
-          if (healthCheck.data) {
-            console.log('Backend API is healthy:', healthCheck.data);
-          }
-        } catch (healthError) {
-          console.log('Health check failed - working in offline mode:', healthError.message);
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          return;
         }
 
-        // Use local storage for authentication
-        const savedUser = localStorage.getItem('user');
-        if (savedUser) {
-          try {
-            const parsedUser = JSON.parse(savedUser);
-            setUser(parsedUser);
-            console.log('User loaded from localStorage:', parsedUser.email);
-          } catch (error) {
-            console.error('Error parsing saved user:', error);
-            localStorage.removeItem('user');
-          }
-        } else {
-          // If no saved user, create a demo user for testing
-          const demoUser = {
-            id: 'demo-1',
-            email: 'demo@example.com',
-            name: 'Demo User',
-            role: 'admin' as const,
-            permissions: ['read', 'write', 'delete'],
-            department: 'Sales'
-          };
-          setUser(demoUser);
-          localStorage.setItem('user', JSON.stringify(demoUser));
-          console.log('Demo user created for testing');
+        if (session?.user && mounted) {
+          const appUser = await convertSupabaseUser(session.user);
+          setUser(appUser);
         }
       } catch (err) {
         console.error('Error in getSession:', err);
@@ -77,8 +72,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     getSession();
 
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' && session?.user) {
+          const appUser = await convertSupabaseUser(session.user);
+          setUser(appUser);
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+        }
+        setIsLoading(false);
+      }
+    );
+
     return () => {
       mounted = false;
+      subscription.unsubscribe();
     };
   }, []);
 
@@ -87,44 +96,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
 
     try {
-      console.log('Attempting login for:', email);
-      const response = await apiService.login(email, password);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      if (response.error) {
-        throw new Error(response.error);
+      if (error) {
+        throw error;
       }
 
-      if (!response.data) {
-        throw new Error('No response data received from server');
+      if (data.user) {
+        const appUser = await convertSupabaseUser(data.user);
+        setUser(appUser);
       }
-
-      // Login successful
-      console.log('Login successful for:', email);
-      const userData = response.data as any;
-
-      // Store JWT tokens
-      if (userData.access) {
-        localStorage.setItem('access_token', userData.access);
-      }
-      if (userData.refresh) {
-        localStorage.setItem('refresh_token', userData.refresh);
-      }
-
-      const user: User = {
-        id: userData.user?.id?.toString() || '1',
-        name: userData.user?.name || email,
-        email: userData.user?.email || email,
-        role: (userData.user?.role || 'admin') as UserRole,
-        department: userData.user?.department || 'Unknown',
-        permissions: userData.user?.permissions || ROLE_PERMISSIONS[(userData.user?.role || 'admin') as UserRole] || [],
-        isActive: userData.user?.is_active !== false,
-        createdAt: userData.user?.created_at || new Date().toISOString(),
-        lastLogin: new Date().toISOString()
-      };
-
-      setUser(user);
-      localStorage.setItem('user', JSON.stringify(user));
-
     } catch (err: any) {
       console.error('Login error:', err);
       const errorMessage = err.message || 'Login failed. Please check your credentials.';
@@ -137,12 +121,61 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async () => {
     try {
-      localStorage.removeItem('user');
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Logout error:', error);
+      }
       setUser(null);
     } catch (err) {
       console.error('Error during logout:', err);
+    }
+  };
+
+  const signUp = async (email: string, password: string, fullName?: string) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          }
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Create user profile in our users table
+      if (data.user) {
+        const { error: profileError } = await supabase
+          .from('users')
+          .insert([
+            {
+              id: data.user.id,
+              email: data.user.email,
+              full_name: fullName,
+              role: 'admin', // default role
+            }
+          ]);
+
+        if (profileError) {
+          console.error('Error creating user profile:', profileError);
+        }
+      }
+
+      return data;
+    } catch (err: any) {
+      console.error('Sign up error:', err);
+      const errorMessage = err.message || 'Sign up failed. Please try again.';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -150,6 +183,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     login,
     logout,
+    signUp,
     isLoading,
     error
   };
