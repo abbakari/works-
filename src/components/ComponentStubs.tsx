@@ -35,6 +35,25 @@ export const RollingForecastReport: React.FC<any> = () => null;
 export const SchemaExplorer: React.FC<any> = () => null;
 export const AnalyticsPlanningModal: React.FC<any> = () => null;
 
+// Critical components that pages import
+export const ExportModal: React.FC<any> = ({ isOpen, onClose, onExport, title }) => null;
+export const GitEtaManagement: React.FC<any> = ({ isOpen, onClose }) => null;
+export const ManagerDataView: React.FC<any> = ({ isOpen, onClose }) => null;
+export const AdminStockManagement: React.FC<any> = ({ isOpen, onClose, items }) => null;
+export const UserCommunicationCenter: React.FC<any> = ({ isOpen, onClose }) => null;
+export const StatsCard: React.FC<any> = (props) => (
+  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm font-medium text-gray-600">{props.title}</p>
+        <p className="text-2xl font-bold text-gray-900">{props.value}</p>
+        <p className="text-sm text-gray-500">{props.subtitle}</p>
+      </div>
+      {props.icon && <props.icon className="w-8 h-8 text-blue-600" />}
+    </div>
+  </div>
+);
+
 // Git Summary Widget with real functionality
 export const GitSummaryWidget: React.FC<{ userRole: string; compact?: boolean }> = ({ userRole, compact = false }) => (
   <div className={`bg-white rounded-lg shadow-sm border border-gray-200 ${compact ? 'p-4' : 'p-6'}`}>
