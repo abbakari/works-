@@ -14,7 +14,7 @@ import FollowBacksButton from '../components/FollowBacksButton';
 import SalesmanStockManagement from '../components/SalesmanStockManagement';
 import ManagerStockManagement from '../components/ManagerStockManagement';
 import ManagerRollingForecastInterface from '../components/ManagerRollingForecastInterface';
-import DataPreservationIndicator from '../components/DataPreservationIndicator';
+import { DataPreservationIndicator } from '../components/ComponentStubs';
 import RollingForecastReport from '../components/RollingForecastReport';
 import { DataManager, applySeasonalDistribution, convertToMonthlyBudget } from '../lib/helpers';
 import { SeasonalDistributionInfo } from '../components/ComponentStubs';
