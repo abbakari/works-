@@ -32,7 +32,7 @@ import CustomerForecastModal from '../components/CustomerForecastModal';
 import GitDetailsTooltip from '../components/GitDetailsTooltip';
 import ViewOnlyMonthlyDistributionModal from '../components/ViewOnlyMonthlyDistributionModal';
 import FollowBacksButton from '../components/FollowBacksButton';
-import DataPreservationIndicator from '../components/DataPreservationIndicator';
+import { DataPreservationIndicator } from '../components/ComponentStubs';
 import SetDistributionModal from '../components/SetDistributionModal';
 import AdminStockManagement from '../components/AdminStockManagement';
 import StockSummaryWidget from '../components/StockSummaryWidget';
