@@ -9,11 +9,10 @@ import ManagerDataView from '../components/ManagerDataView';
 import GitSummaryWidget from '../components/GitSummaryWidget';
 import AdminStockManagement from '../components/AdminStockManagement';
 import UserCommunicationCenter from '../components/UserCommunicationCenter';
-import CommunicationDemoInfo from '../components/CommunicationDemoInfo';
 import { useAuth, getUserRoleName } from '../contexts/AuthContext';
 import { useStock } from '../contexts/StockContext';
 import { useBudget } from '../contexts/BudgetContext';
-import { initializeCommunicationDemo } from '../utils/communicationDemo';
+import { apiService } from '../lib/api';
 
 
 const Dashboard: React.FC = () => {
@@ -29,12 +28,19 @@ const Dashboard: React.FC = () => {
   const [isCommunicationCenterOpen, setIsCommunicationCenterOpen] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(new Date());
 
-  // Initialize demo communication data
+  // Initialize real data from Supabase
   React.useEffect(() => {
-    const initialized = initializeCommunicationDemo();
-    if (initialized) {
-      console.log('Communication demo data initialized');
-    }
+    const loadRealData = async () => {
+      try {
+        const { data: userData } = await apiService.getUserProfile();
+        const { data: budgets } = await apiService.getBudgets();
+        const { data: inventory } = await apiService.getInventoryItems();
+        console.log('Real data loaded:', { userData, budgets, inventory });
+      } catch (error) {
+        console.error('Error loading real data:', error);
+      }
+    };
+    loadRealData();
   }, []);
 
   const showNotification = (message: string, type: 'success' | 'error') => {
