@@ -45,7 +45,7 @@ const Dashboard: React.FC = () => {
     setTimeout(() => setNotification(null), 3000);
   };
 
-  const handleExport = (config: ExportConfig) => {
+  const handleExport = (config: any) => {
     const fileName = `dashboard_report_${config.year}.${config.format === 'excel' ? 'xlsx' : config.format}`;
     showNotification(`Exporting dashboard report as ${fileName}...`, 'success');
 
