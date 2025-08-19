@@ -6,7 +6,7 @@ import { PieChartIcon, TrendingUp, Clock, Download, RefreshCw, BarChart3, Target
 import ExportModal, { ExportConfig } from '../components/ExportModal';
 import GitEtaManagement from '../components/GitEtaManagement';
 import ManagerDataView from '../components/ManagerDataView';
-import GitSummaryWidget from '../components/GitSummaryWidget';
+import { GitSummaryWidget } from '../components/ComponentStubs';
 import AdminStockManagement from '../components/AdminStockManagement';
 import UserCommunicationCenter from '../components/UserCommunicationCenter';
 import { useAuth, getUserRoleName } from '../contexts/AuthContext';
