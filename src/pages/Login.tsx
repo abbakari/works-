@@ -193,9 +193,11 @@ const GlassCard = styled(Card)(({ theme }) => ({
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { login, error, isLoading: authLoading } = useAuth();
+  const [isSignUp, setIsSignUp] = useState(false);
+  const { login, signUp, error, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const isMobile = useMediaQuery(yellowTheme.breakpoints.down('sm'));
 
