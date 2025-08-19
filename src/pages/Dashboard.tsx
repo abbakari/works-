@@ -13,6 +13,7 @@ import { useAuth, getUserRoleName } from '../contexts/AuthContext';
 import { useStock } from '../contexts/StockContext';
 import { useBudget } from '../contexts/BudgetContext';
 import { apiService } from '../lib/api';
+import { DataManager } from '../lib/helpers';
 
 
 const Dashboard: React.FC = () => {
@@ -28,14 +29,16 @@ const Dashboard: React.FC = () => {
   const [isCommunicationCenterOpen, setIsCommunicationCenterOpen] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(new Date());
 
-  // Initialize real data from Supabase
+  // Load real data from Supabase
   React.useEffect(() => {
     const loadRealData = async () => {
       try {
-        const { data: userData } = await apiService.getUserProfile();
-        const { data: budgets } = await apiService.getBudgets();
-        const { data: inventory } = await apiService.getInventoryItems();
-        console.log('Real data loaded:', { userData, budgets, inventory });
+        const [userData, budgets, inventory] = await Promise.all([
+          apiService.getUserProfile(),
+          DataManager.loadBudgetData(),
+          DataManager.loadInventoryData()
+        ]);
+        console.log('Real Supabase data loaded:', { userData, budgets, inventory });
       } catch (error) {
         console.error('Error loading real data:', error);
       }
