@@ -6,6 +6,8 @@ export const createDemoUser = async () => {
     const demoPassword = 'demo123456';
     const demoName = 'Demo User';
 
+    console.log('Attempting to create demo user...');
+
     // First, try to sign up the demo user
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email: demoEmail,
@@ -14,28 +16,41 @@ export const createDemoUser = async () => {
         data: {
           full_name: demoName,
           role: 'admin',
+          department: 'Sales'
         }
       }
     });
 
-    if (signUpError && !signUpError.message.includes('User already registered')) {
-      throw signUpError;
+    console.log('Signup response:', { signUpData, signUpError });
+
+    if (signUpError) {
+      if (signUpError.message.includes('User already registered')) {
+        console.log('User already exists, will try to sign in');
+      } else {
+        console.error('Signup error:', signUpError);
+        throw signUpError;
+      }
+    } else {
+      console.log('User created successfully!');
     }
 
-    // If signup was successful or user exists, try to sign in
+    // Try to sign in regardless of signup result
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email: demoEmail,
       password: demoPassword,
     });
 
+    console.log('Sign in response:', { signInData, signInError });
+
     if (signInError) {
+      console.error('Sign in error:', signInError);
       throw signInError;
     }
 
-    console.log('Demo user created/signed in successfully:', signInData);
+    console.log('Demo user signed in successfully!');
     return { email: demoEmail, password: demoPassword, name: demoName };
   } catch (error) {
-    console.error('Error creating demo user:', error);
+    console.error('Error in createDemoUser:', error);
     throw error;
   }
 };
