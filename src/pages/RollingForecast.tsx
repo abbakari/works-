@@ -17,7 +17,7 @@ import ManagerRollingForecastInterface from '../components/ManagerRollingForecas
 import DataPreservationIndicator from '../components/DataPreservationIndicator';
 import RollingForecastReport from '../components/RollingForecastReport';
 import { DataManager, applySeasonalDistribution, convertToMonthlyBudget } from '../lib/helpers';
-import SeasonalDistributionInfo from '../components/SeasonalDistributionInfo';
+import { SeasonalDistributionInfo } from '../components/ComponentStubs';
 import { getCurrentYear, getShortMonthNames, formatDateTimeForDisplay, getTimeAgo } from '../lib/helpers';
 
 // Helper functions for time and year management
