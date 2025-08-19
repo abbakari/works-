@@ -213,16 +213,24 @@ const Login: React.FC = () => {
     // Add timeout protection
     const timeoutId = setTimeout(() => {
       setIsLoading(false);
-      console.warn('Login timeout - resetting loading state');
+      console.warn('Auth timeout - resetting loading state');
     }, 10000);
 
     try {
-      await login(email, password);
+      if (isSignUp) {
+        if (signUp) {
+          await signUp(email, password, fullName);
+          // After successful signup, automatically sign in
+          await login(email, password);
+        }
+      } else {
+        await login(email, password);
+      }
       clearTimeout(timeoutId);
       navigate('/dashboard');
     } catch (err) {
       clearTimeout(timeoutId);
-      console.error('Login error:', err);
+      console.error('Auth error:', err);
     } finally {
       setIsLoading(false);
     }
