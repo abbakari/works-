@@ -16,27 +16,28 @@ import ManagerStockManagement from '../components/ManagerStockManagement';
 import ManagerRollingForecastInterface from '../components/ManagerRollingForecastInterface';
 import DataPreservationIndicator from '../components/DataPreservationIndicator';
 import RollingForecastReport from '../components/RollingForecastReport';
-import DataPersistenceManager, { SavedForecastData } from '../utils/dataPersistence';
-import { initializeSampleGitData } from '../utils/sampleGitData';
-import { applySeasonalDistribution, convertToMonthlyBudget } from '../utils/seasonalDistribution';
+import { DataManager, applySeasonalDistribution, convertToMonthlyBudget } from '../lib/helpers';
 import SeasonalDistributionInfo from '../components/SeasonalDistributionInfo';
-import {
-  getCurrentMonth,
-  getCurrentYear,
-  getShortMonthNames,
-  isFutureMonth,
-  getFutureMonthsForYear,
-  formatDateTimeForDisplay,
-  getTimeAgo
-} from '../utils/timeUtils';
-import {
-  generateAvailableYears,
-  getDefaultYearSelection,
-  getYearValue as getYearValueUtil,
-  setYearValue,
-  createSampleYearlyData,
-  transformLegacyToYearly
-} from '../utils/dynamicYearUtils';
+import { getCurrentYear, getShortMonthNames, formatDateTimeForDisplay, getTimeAgo } from '../lib/helpers';
+
+// Helper functions for time and year management
+const getCurrentMonth = () => new Date().getMonth();
+const isFutureMonth = (month: number, year: number) => {
+  const now = new Date();
+  return year > now.getFullYear() || (year === now.getFullYear() && month > now.getMonth());
+};
+const getFutureMonthsForYear = (year: number) => {
+  const now = new Date();
+  if (year > now.getFullYear()) return Array.from({length: 12}, (_, i) => i);
+  if (year === now.getFullYear()) return Array.from({length: 12 - now.getMonth()}, (_, i) => now.getMonth() + i);
+  return [];
+};
+const generateAvailableYears = () => Array.from({length: 5}, (_, i) => getCurrentYear() + i);
+const getDefaultYearSelection = () => getCurrentYear();
+const getYearValueUtil = (year: number) => year;
+const setYearValue = (year: number) => year;
+const createSampleYearlyData = () => ({year: getCurrentYear(), data: []});
+const transformLegacyToYearly = (data: any) => data;
 
 const RollingForecast: React.FC = () => {
   const { user } = useAuth();
@@ -190,7 +191,7 @@ const RollingForecast: React.FC = () => {
     const loadSavedForecastData = async () => {
       if (user) {
         try {
-          const savedForecastData = await DataPersistenceManager.getRollingForecastDataByUser(user.name);
+          const savedForecastData = await DataManager.getRollingForecastDataByUser(user.name);
           if (savedForecastData && savedForecastData.length > 0) {
             console.log('Loading saved forecast data for', user.name, ':', savedForecastData.length, 'items');
 
@@ -277,7 +278,7 @@ const RollingForecast: React.FC = () => {
     const updateGitDataInTable = async () => {
       const updatedTableData = await Promise.all(tableData.map(async (row) => {
         try {
-          const gitSummary = await DataPersistenceManager.getGitSummaryForItem(row.customer, row.item);
+          const gitSummary = await DataManager.getGitSummaryForItem(row.customer, row.item);
           return {
             ...row,
             git: gitSummary.gitQuantity,
@@ -412,12 +413,12 @@ const RollingForecast: React.FC = () => {
         const workflowId = await submitForApproval([], forecastData);
 
         // Save original data and create submission copies
-        await DataPersistenceManager.saveRollingForecastData(savedForecastData);
-        await DataPersistenceManager.saveSubmissionCopies([], savedForecastData, workflowId);
+        await DataManager.saveRollingForecastData(savedForecastData);
+        await DataManager.saveSubmissionCopies([], savedForecastData, workflowId);
 
         // Update status to track submission without removing original data
         savedForecastData.forEach(item => {
-          DataPersistenceManager.updateRollingForecastStatus(item.id, 'submitted');
+          DataManager.updateRollingForecastStatus(item.id, 'submitted');
         });
 
         console.log('Rolling forecast data preserved for other purposes:', savedForecastData);
@@ -650,7 +651,7 @@ const RollingForecast: React.FC = () => {
           status: 'draft'
         };
 
-        DataPersistenceManager.saveRollingForecastData([savedData]);
+        DataManager.saveRollingForecastData([savedData]);
       }
     }
   };
@@ -1715,7 +1716,7 @@ const RollingForecast: React.FC = () => {
                         <GitDetailsTooltip customer={row.customer} item={row.item}>
                           {(() => {
                             // Get GIT summary synchronously (assuming it's not a promise in this context)
-                            const gitSummary = DataPersistenceManager.getGitSummaryForItem(row.customer, row.item);
+                            const gitSummary = DataManager.getGitSummaryForItem(row.customer, row.item);
                             
                             // Handle potential promise return
                             if (gitSummary instanceof Promise) {
@@ -1761,7 +1762,7 @@ const RollingForecast: React.FC = () => {
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-900">
                         {(() => {
-                          const gitSummary = DataPersistenceManager.getGitSummaryForItem(row.customer, row.item);
+                          const gitSummary = DataManager.getGitSummaryForItem(row.customer, row.item);
                           
                           // Handle potential promise return
                           if (gitSummary instanceof Promise) {
