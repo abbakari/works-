@@ -1,10 +1,10 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://lismbspafdvxtrhvycti.supabase.co'
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxpc21ic3BhZmR2eHRyaHZ5Y3RpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1OTYxNjMsImV4cCI6MjA3MTE3MjE2M30.LH-K2dUASvVxFeQ6cWSlkx__l27elwJwiB_vqdk2gFc'
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables')
+  console.error('Missing Supabase environment variables, using fallback values')
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
