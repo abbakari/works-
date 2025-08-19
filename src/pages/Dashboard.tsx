@@ -1,14 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
-import StatsCard from '../components/StatsCard';
 import { PieChartIcon, TrendingUp, Clock, Download, RefreshCw, BarChart3, Target, AlertTriangle, Users, Package, Building, Truck, Eye, MessageSquare } from 'lucide-react';
-import ExportModal, { ExportConfig } from '../components/ExportModal';
-import GitEtaManagement from '../components/GitEtaManagement';
-import ManagerDataView from '../components/ManagerDataView';
-import { GitSummaryWidget } from '../components/ComponentStubs';
-import AdminStockManagement from '../components/AdminStockManagement';
-import UserCommunicationCenter from '../components/UserCommunicationCenter';
+import { GitSummaryWidget, ExportModal, GitEtaManagement, ManagerDataView, AdminStockManagement, UserCommunicationCenter, StatsCard } from '../components/ComponentStubs';
 import { useAuth, getUserRoleName } from '../contexts/AuthContext';
 import { useStock } from '../contexts/StockContext';
 import { useBudget } from '../contexts/BudgetContext';
