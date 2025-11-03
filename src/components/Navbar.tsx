@@ -26,7 +26,7 @@ const Navbar: React.FC<NavbarProps> = ({ onPasswordModalOpen }) => {
     'text-amber-400'
   ];
 
-  const visionText = "Trust you can take a year to build but a minute to destroy";
+  const visionText = "STMBudget - Professional Sales Budgeting & Forecasting Platform";
 
   useEffect(() => {
     const colorInterval = setInterval(() => {

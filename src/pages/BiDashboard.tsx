@@ -24,8 +24,19 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { formatCurrency, formatPercentage } from '../utils/budgetCalculations';
-import { budgetDataIntegration, BudgetAnalyticsData, ForecastInsight } from '../utils/budgetDataIntegration';
+import { formatCurrency, formatPercentage, DataManager, budgetDataIntegration } from '../lib/helpers';
+
+// Budget analytics types
+interface BudgetAnalyticsData {
+  totalBudget: number;
+  itemCount: number;
+}
+
+interface ForecastInsight {
+  id: string;
+  message: string;
+  type: 'warning' | 'success' | 'info';
+}
 import SalesTrendChart from '../components/charts/SalesTrendChart';
 import BudgetComparisonChart from '../components/charts/BudgetComparisonChart';
 import BudgetAllocationChart from '../components/charts/BudgetAllocationChart';

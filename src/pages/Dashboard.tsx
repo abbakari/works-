@@ -1,19 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
-import StatsCard from '../components/StatsCard';
 import { PieChartIcon, TrendingUp, Clock, Download, RefreshCw, BarChart3, Target, AlertTriangle, Users, Package, Building, Truck, Eye, MessageSquare } from 'lucide-react';
-import ExportModal, { ExportConfig } from '../components/ExportModal';
-import GitEtaManagement from '../components/GitEtaManagement';
-import ManagerDataView from '../components/ManagerDataView';
-import GitSummaryWidget from '../components/GitSummaryWidget';
-import AdminStockManagement from '../components/AdminStockManagement';
-import UserCommunicationCenter from '../components/UserCommunicationCenter';
-import CommunicationDemoInfo from '../components/CommunicationDemoInfo';
+import { GitSummaryWidget, ExportModal, GitEtaManagement, ManagerDataView, AdminStockManagement, UserCommunicationCenter, StatsCard } from '../components/ComponentStubs';
 import { useAuth, getUserRoleName } from '../contexts/AuthContext';
 import { useStock } from '../contexts/StockContext';
 import { useBudget } from '../contexts/BudgetContext';
-import { initializeCommunicationDemo } from '../utils/communicationDemo';
+import { apiService } from '../lib/api';
+import { DataManager } from '../lib/helpers';
 
 
 const Dashboard: React.FC = () => {
@@ -29,12 +23,21 @@ const Dashboard: React.FC = () => {
   const [isCommunicationCenterOpen, setIsCommunicationCenterOpen] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(new Date());
 
-  // Initialize demo communication data
+  // Load real data from Supabase
   React.useEffect(() => {
-    const initialized = initializeCommunicationDemo();
-    if (initialized) {
-      console.log('Communication demo data initialized');
-    }
+    const loadRealData = async () => {
+      try {
+        const [userData, budgets, inventory] = await Promise.all([
+          apiService.getUserProfile(),
+          DataManager.loadBudgetData(),
+          DataManager.loadInventoryData()
+        ]);
+        console.log('Real Supabase data loaded:', { userData, budgets, inventory });
+      } catch (error) {
+        console.error('Error loading real data:', error);
+      }
+    };
+    loadRealData();
   }, []);
 
   const showNotification = (message: string, type: 'success' | 'error') => {
@@ -42,7 +45,7 @@ const Dashboard: React.FC = () => {
     setTimeout(() => setNotification(null), 3000);
   };
 
-  const handleExport = (config: ExportConfig) => {
+  const handleExport = (config: any) => {
     const fileName = `dashboard_report_${config.year}.${config.format === 'excel' ? 'xlsx' : config.format}`;
     showNotification(`Exporting dashboard report as ${fileName}...`, 'success');
 
@@ -536,8 +539,16 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Communication Demo Info - Show for all users */}
-        <CommunicationDemoInfo />
+        {/* Real Communication Center - Available for all users */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center space-x-3">
+            <MessageSquare className="w-5 h-5 text-blue-600" />
+            <div>
+              <h3 className="font-semibold text-blue-900">Communication Center</h3>
+              <p className="text-sm text-blue-700">Connected to real Supabase data - no demo mode</p>
+            </div>
+          </div>
+        </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">

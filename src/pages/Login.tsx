@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { createDemoUser, getDemoCredentials } from '../utils/demoSetup';
 import {
   Box,
   Card,
@@ -202,30 +201,6 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const isMobile = useMediaQuery(yellowTheme.breakpoints.down('sm'));
 
-  const handleCreateDemoUser = async () => {
-    setIsLoading(true);
-    try {
-      const demoUser = await createDemoUser();
-      // Auto-fill the form with demo credentials
-      setEmail(demoUser.email);
-      setPassword(demoUser.password);
-      setFullName(demoUser.name);
-
-      // Show success message
-      alert('Demo user created successfully! You can now sign in with the auto-filled credentials.');
-    } catch (error: any) {
-      console.error('Failed to create demo user:', error);
-      // If user already exists, just fill the form
-      const demoCredentials = getDemoCredentials();
-      setEmail(demoCredentials.email);
-      setPassword(demoCredentials.password);
-      setFullName(demoCredentials.name);
-
-      alert('Demo credentials loaded! You can now sign in.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // Reset loading states on mount
   useEffect(() => {
@@ -500,24 +475,6 @@ const Login: React.FC = () => {
                       {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
                     </Button>
 
-                    <Button
-                      fullWidth
-                      variant="outlined"
-                      onClick={handleCreateDemoUser}
-                      disabled={isLoading || authLoading}
-                      sx={{
-                        mt: 1,
-                        mb: 2,
-                        borderColor: 'primary.main',
-                        color: 'primary.main',
-                        '&:hover': {
-                          borderColor: 'primary.dark',
-                          backgroundColor: 'rgba(255, 215, 0, 0.1)',
-                        },
-                      }}
-                    >
-                      Create/Load Demo User
-                    </Button>
 
                     {(isLoading || authLoading) && (
                       <Button
